@@ -5,7 +5,7 @@
 | **Member** | **UID**   |
 | ---------- | --------- |
 | Troy       | A01479290 |
-| Ariana     | A0        |
+| Ariana     | A01497071 |
 | Olena      | A0        |
 | Gai        | A0        |
 | Paul       | A0        |
