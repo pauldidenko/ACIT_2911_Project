@@ -2,10 +2,11 @@
 
 ## Change Logs
 
-| **Date**   | **Change**       | **USER** |
-| ---------- | ---------------- | -------- |
-| 2026-04-29 | Made README      | TROY     |
-| 2026-04-28 | Initialized Repo | Paul     |
+| **Date**   | **Change**        | **USER** |
+| ---------- | ----------------- | -------- |
+| 2026-04-29 | Created ChangeLog | Daniel   |
+| 2026-04-29 | Created README    | TROY     |
+| 2026-04-28 | Initialized Repo  | Paul     |
 
 ### Team Members:
 
