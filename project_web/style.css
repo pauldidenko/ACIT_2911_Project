@@ -1,0 +1,143 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+  }
+
+@media screen and (max-width:842px){
+
+.container{
+    flex-direction:column;
+}
+
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #fefce8;
+}
+
+.navbar{
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+    background-color: #3b82f6;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border-radius: 10px;
+    height: 80px;
+    max-width: 99%;
+    margin: 5px auto;
+    padding: 20px;
+    top: auto;
+    border: 2px solid black;
+}
+
+.nav-list {
+    display: flex;
+    gap: 20px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-list a {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 10px 15px;
+    font-size: clamp(0.8rem, 2vw, 1.3rem);
+    font-weight: bold;
+}
+
+.nav-list .login {
+    background-color: white;
+    color: rgb(45, 143, 255);
+    padding: 8px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    border: 2px solid black;
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.nav-list .login:hover {
+    background-color: black;
+    color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.logo a{
+    font-family: 'Arial', sans-serif;
+    font-weight: 700;
+    font-size: clamp(1rem, 5vw, 3rem);
+    text-decoration: none; 
+    color: white;
+}
+
+.hero{
+    text-align: center;
+    width: 100%;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+}
+
+.campus {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    border-radius: 10px;
+    max-width: 99%;
+    margin: 5px auto;
+    padding: 20px;
+    background-color: #FFFFFF;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border: 2px solid black;
+
+}
+
+.campus>h2 {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.campus-item {
+    flex: 1;
+}
+
+.campus-item img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover; 
+    border-radius: 10px;
+    margin-top: 20px;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border: 2px solid black;
+    margin-bottom: 20px;
+}
+
+.campus-item img:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.campus-item h2 {
+    text-align: center;
+    margin-top: 10px;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+}
+
+
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #3b82f6;
+    color: white;
+    margin-top: 20px;
+    border-radius: 10px;
+    max-width: 99%;
+    margin: 5px auto;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border: 2px solid black;
+}
