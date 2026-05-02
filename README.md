@@ -11,6 +11,6 @@
 | Paul       | A0        |
 | Daniel     | A01223223 |
 
-## About Foundit
+## About foundIt
 
-**Foundit** is a simple lost & found tracker designed for BCIT security to log instances of items reported lost on campus as well as items that have been found.
+**foundIt** is a simple lost & found tracker designed for BCIT security to log instances of items reported lost on campus as well as items that have been found.
