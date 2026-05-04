@@ -2,16 +2,23 @@
     text-align: center;
     width: 100%;
     font-size: clamp(1rem, 2vw, 1.3rem);
+    margin-top: 10px;
+    cursor: default;
+}
+
+.card {
+    align-self: center;
+    border-radius: 10px;
 }
 
 .campus {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 10px;
     border-radius: 10px;
     max-width: 98%;
     margin: 5px auto;
-    padding: 20px;
+    padding: 10px 10px;
     background-color: #FFFFFF;
     box-shadow: 4px 4px 0px 0px #000000;
     border: 2px solid black;
@@ -20,26 +27,34 @@
 }
 
 .campus>h2 {
-    width: 100%;
+    display: block;
     text-align: center;
-    margin-bottom: 10px;
+    gap: 0;
+    margin-top: 10px;
+    width: 100%;
+    font-size: clamp(1rem, 3vw, 2rem);
 }
 
 .campus-item {
-    flex: 1;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 10px;
+    display: flex;
+    padding: 10px;
 }
 
 .campus-item img {
     display: block;
-    width: 95%;
-    height: 400px;
+    width: 450px;
+    height: 350px;
     object-fit: cover;
     border-radius: 10px;
     box-shadow: 4px 4px 0px 0px #000000;
     border: 2px solid black;
     margin: 5px auto;
+    margin-bottom: 20px;
+    gap: 10px;
 }
 
 .campus-item img:hover {
@@ -48,10 +63,29 @@
     cursor: pointer;
 }
 
-.campus-item h2 {
-    text-align: center;
-    margin-top: 10px;
-    font-size: clamp(1rem, 2vw, 1.3rem);
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: auto;
 }
 
-
+.lost_btn,
+.found_btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 2px solid black;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #f472b6;
+    box-shadow: 3px 3px 0 black;
+    width: 80px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease
+}
+.lost_btn:hover,
+.found_btn:hover {
+    transform: translateY(-2px);
+    background-color: #000000;
+    color: #FFFFFF;
+}
