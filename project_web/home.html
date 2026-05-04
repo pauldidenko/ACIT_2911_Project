@@ -19,7 +19,9 @@
                 <li><a href="home.html" class="home">Home</a></li>
                 <li><a href="lost.html" class="lost">Lost Items</a></li>
                 <li><a href="found.html" class="found">Found Items</a></li>
-                <li><a href="#" class="login">Login</a></li>
+                <li><a href="account.html" class="account">Account</a></li>
+                <li><a href="login.html" class="login">Login</a></li>
+                <!--<li><a href="signup.html" class="Signup">Signup</a></li>-->
             </ul>   
         </nav>
     </header>
@@ -28,22 +30,43 @@
         <div class="hero">
             <h1>Welcome to BCIT Lost and Found</h1>
         </div>
-        <div class = "campus-item">
-            <img src="picture/Burnaby_BCIT.jpg" alt="BCIT" class="hero-image">
+    <section class="card">
+        <div class="campus-item">
+            <img src="picture/Burnaby_BCIT.jpg" alt="BCIT Burnaby Campus">
             <h2>BCIT Burnaby Campus</h2>
+    
+            <div class="btn-group">
+                <button class="lost_btn">Lost</button>
+                <button class="found_btn">Found</button>
+            </div>
         </div>
+    </section>
+    <section class="card">
         <div class = "campus-item">    
-            <img src="picture/Downtown_BCIT.jpg" alt="BCIT" class="hero-image">
+            <img src="picture/Downtown_BCIT.jpg" alt="BCIT Downtown Campus">
             <h2>BCIT Downtown Campus</h2>
         </div>
+   
+            <div class="btn-group">
+                <button class="lost_btn">Lost</button>
+                <button class="found_btn">Found</button>
+ </div>
+    </section>
+    <section class="card">
         <div class = "campus-item">
-            <img src="picture/Aerospace_BCIT.jpg" alt="BCIT" class="hero-image">
+            <img src="picture/Aerospace_BCIT.jpg" alt="BCIT Aerospace Campus">
             <h2>BCIT Aerospace Campus</h2>
         </div>
+    
+            <div class="btn-group">
+                <button class="lost_btn">Lost</button>
+                <button class="found_btn">Found</button>
+            </div>
+    </section>
     </div>
     <main class="card">
         <div class="container">
-            <section class=""></section>
+            
             <section class=""></section>
             <section class=""></section>
             <section class=""></section>
@@ -52,11 +75,24 @@
     </main>
     <!-- Footer -->
     <footer class="footer">
-        <h2>Contact Us</h2>
-        <p>Email: lost@bcit.ca</p>
-        <p>Phone: 416-280-5555</p>
-        <p>Address: BCIT, Burnaby, BC, Canada</p>
-        <p>&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
+        <div class="footer-left">
+            <h3>Contact</h3>
+            <p><a href="mailto:lost@bcit.ca">lost@bcit.ca</a></p>
+            <p>416-280-5555</p>
+        </div>
+        
+        <div class="footer-right">
+            <h3>Address</h3>
+            <p><a href="https://www.bcit.ca/">BCIT Burnaby, BC</a></p>
+        
+            <h3>Follow Us</h3>
+            <p><a href="https://www.instagram.com/bcitlostandfound/">Instagram</a></p>
+            <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
+        </div>
+
+        <div class="copyright">
+            <p>&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
+        </div>
     </footer>
 
     <!-- focus effect -->
