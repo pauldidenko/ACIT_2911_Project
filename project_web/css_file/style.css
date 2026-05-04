@@ -28,6 +28,17 @@
         flex-direction:column;
         width: 85%;
     }
+    
+    .campus-item img {
+        width: 100%;
+        height: 220px;
+    }
+
+    .campus-item h2 {
+        font-size: clamp(1rem, 4vw, 2rem);
+        text-align: center;
+        gap: 0;
+    }
 
     .logo {
         gap: 0;
@@ -40,12 +51,36 @@
 }
 
 @media screen and (max-width: 600px) {
+    .hero h1 {
+        font-size: clamp(1rem, 4vw, 2rem);
+        text-align: center;
+    }
+    
+    .card {
+        flex: 0 1 30%;
+    }
+
     .campus {
         flex-direction: column;
     }
 
     .campus-item {
         width: 90%;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .campus-item img {
+        width: 100%;
+        max-width: 100%;
+        height: 220px;
+        object-fit: cover;
+    }
+
+    .campus-item h2 {
+        font-size: 1.2rem;
+        text-align: center;
+        gap: 0;
     }
 
     .logo {
@@ -117,6 +152,24 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.nav-list .Signup {
+    background-color: white;
+    color: rgb(45, 143, 255);
+    padding: 8px 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    border: 2px solid black;
+    box-shadow: 4px 4px 0px 0px #000000;
+    max-width: 98%;
+}
+
+.nav-list .Signup:hover {
+    background-color: black;
+    color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 .logo{
     display: flex;
     align-items: center;
@@ -129,23 +182,35 @@ body {
     color: white;
 }
 
-footer {
-    text-align: center;
-    padding: 20px;
+.footer {
     background-color: #3b82f6;
     color: white;
-    margin-top: 20px;
     border-radius: 10px;
-<<<<<<< HEAD
-    max-width: 99%;
-    margin: 5px auto;
-    box-shadow: 4px 4px 0px 0px #000000;
-    border: 2px solid black;
-=======
     max-width: 98%;
     margin: 5px auto;
     box-shadow: 4px 4px 0px 0px #000000;
     border: 2px solid black;
+    padding: 30px 20px;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    text-align: center;
+}
+
+.footer-left,
+.footer-center,
+.footer-right {
+    width: 100%;
+}
+
+.footer a {
+    color: white;
+    text-decoration: none;
+}
+
+.copyright {
+    grid-column: 1 / 4;
+    text-align: center;
     margin-top: 20px;
->>>>>>> 31ca87568baf7088b5411712cf0b00e8ef3d61d9
 }
