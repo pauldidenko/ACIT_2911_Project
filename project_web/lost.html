@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCIT los and found | Home</title>
+    <link rel="stylesheet" href="./css_file/style.css">
+    <link rel="stylesheet" href="./css_file/lost_body.css">
+
+</head>
+
+<body>
+    <!-- Navigation -->
+    <header class="navbar">
+        <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
+        <nav class="nav-links">
+            <ul class="nav-list">
+                <li><a href="home.html" class="home">Home</a></li>
+                <li><a href="lost.html" class="lost">Lost Items</a></li>
+                <li><a href="found.html" class="found">Found Items</a></li>
+                <li><a href="#" class="login">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!--Lost Catalog-->
+
+    <section class="lost-catalog">
+        <div class="catalog-header">
+            <h2>Lost Items Catalog</h2>
+            <a href="add-lost-item.html" class="catalog-add-btn">+ Add Lost Item</a>
+        </div>
+
+        <div class="catalog-controls">
+            <input type="text" placeholder="Search by item name..." class="search-box">
+
+            <select class="filter-box">
+                <option>Category</option>
+                <option>Electronics</option>
+                <option>Cards / ID</option>
+                <option>Bags & Clothing</option>
+                <option>Other Personal Items</option>
+            </select>
+
+            <select class="filter-box">
+                <option>Status</option>
+                <option>Lost</option>
+                <option>Returned</option>
+            </select>
+
+            <input type="date" class="filter-box">
+        </div>
+
+        <!--Cards-->
+       
+        <div class="items-grid">
+
+            <div class="item-card">
+                <img src="picture/wallet.jpg" alt="Black wallet">
+
+                <div class="item-info">
+                    <div class="badges">
+                        <span class="status lost">Lost</span>
+                        <span class="category-badge">Other Personal Items</span>
+                    </div>
+
+                    <h3>Black Wallet</h3>
+                    <p>Black leather wallet lost near the library entrance.</p>
+                    <p><strong>Date Lost:</strong> Apr 20</p>
+                    <p><strong>Location:</strong> Library</p>
+
+                    <div class="card-buttons">
+                        <a href="#" class="view-btn">View</a>
+                        <a href="#" class="edit-btn">Edit</a>
+                        <a href="#" class="delete-btn">Delete</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="item-card">
+                <img src="picture/airpods.jpg" alt="AirPods">
+
+                <div class="item-info">
+                    <div class="badges">
+                        <span class="status returned">Returned</span>
+                        <span class="category-badge">Electronics</span>
+                    </div>
+
+                    <h3>AirPods</h3>
+                    <p>White AirPods case lost in the cafeteria.</p>
+                    <p><strong>Date Lost:</strong> Apr 25</p>
+                    <p><strong>Location:</strong> Cafeteria</p>
+
+                    <div class="card-buttons">
+                        <a href="#" class="view-btn">View</a>
+                        <a href="#" class="edit-btn">Edit</a>
+                        <a href="#" class="delete-btn">Delete</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="item-card">
+                <img src="picture/backpack.jpg" alt="Backpack">
+
+                <div class="item-info">
+                    <div class="badges">
+                        <span class="status lost">Lost</span>
+                        <span class="category-badge">Bags & Clothing</span>
+                    </div>
+
+                    <h3>Backpack</h3>
+                    <p>Blue backpack lost in the hallway.</p>
+                    <p><strong>Date Lost:</strong> Apr 26</p>
+                    <p><strong>Location:</strong> SW1 Hallway</p>
+
+                    <div class="card-buttons">
+                        <a href="#" class="view-btn">View</a>
+                        <a href="#" class="edit-btn">Edit</a>
+                        <a href="#" class="delete-btn">Delete</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="footer">
+        <h2>Contact Us</h2>
+        <p>Email: lost@bcit.ca</p>
+        <p>Phone: 416-280-5555</p>
+        <p>Address: BCIT, Burnaby, BC, Canada</p>
+        <p>&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
+    </footer>

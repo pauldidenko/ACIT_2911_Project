@@ -75,3 +75,15 @@ body {
     color: white;
 }
 
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #3b82f6;
+    color: white;
+    margin-top: 20px;
+    border-radius: 10px;
+    max-width: 99%;
+    margin: 5px auto;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border: 2px solid black;
+}
