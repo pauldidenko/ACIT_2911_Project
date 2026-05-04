@@ -9,13 +9,14 @@
     flex-wrap: wrap;
     gap: 20px;
     border-radius: 10px;
-    max-width: 99%;
+    max-width: 98%;
     margin: 5px auto;
     padding: 20px;
     background-color: #FFFFFF;
     box-shadow: 4px 4px 0px 0px #000000;
     border: 2px solid black;
-
+    margin-top: 20px;
+    justify-content: center;
 }
 
 .campus>h2 {
@@ -26,17 +27,19 @@
 
 .campus-item {
     flex: 1;
+    align-items: center;
+    justify-content: center;
 }
 
 .campus-item img {
-    width: 100%;
+    display: block;
+    width: 95%;
     height: 400px;
     object-fit: cover;
     border-radius: 10px;
-    margin-top: 20px;
     box-shadow: 4px 4px 0px 0px #000000;
     border: 2px solid black;
-    margin-bottom: 20px;
+    margin: 5px auto;
 }
 
 .campus-item img:hover {
@@ -52,15 +55,3 @@
 }
 
 
-footer {
-    text-align: center;
-    padding: 20px;
-    background-color: #3b82f6;
-    color: white;
-    margin-top: 20px;
-    border-radius: 10px;
-    max-width: 99%;
-    margin: 5px auto;
-    box-shadow: 4px 4px 0px 0px #000000;
-    border: 2px solid black;
-}
