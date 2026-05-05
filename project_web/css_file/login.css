@@ -6,13 +6,27 @@ section {
     background-color: #FFFFFF;
     width: auto;
     max-width: 98%;
-    height: 400px;
+    height: 450px;
     margin: 20px auto;
     box-shadow: 4px 4px 0px 0px #000000;
     border: 2px solid black;
     align-items: center;
-    padding-top: 40px;
     gap: 20px;
+    justify-content: center;
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    border: 2px solid black;
+    padding: 30px;
+    border-radius: 10px;  
+    box-shadow: 4px 4px 0px 0px #000000;
+    background-color: #3b82f6;
+    margin: 0 auto;
+    bottom: 20px;
 }
 
 .login-container {
@@ -43,8 +57,8 @@ button {
     padding: 10px 20px;
     border-radius: 5px;
     border: 2px solid black;
-    background-color: #3b82f6;
-    color: white;
+    background-color: #FFFFFF;
+    color: black;
     font-size: 1rem;
     cursor: pointer;
     box-shadow: 4px 4px 0px 0px #000000;
@@ -52,19 +66,20 @@ button {
 
 button:hover {  
     background-color: black;
+    color: white;
     transition: background-color 0.3s ease;
 }
 
 .login-section h2 {
     font-size: clamp(1.5rem, 4vw, 3rem);
-    color: rgb(45, 143, 255);
+    color: white;
     display: block;
     text-align: center;
 }
 
 .login-form b {
     font-size: clamp(1rem, 3vw, 1.5rem);
-    color: black;
+    color: white;
     display: block;
     text-align: left;
 
