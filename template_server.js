@@ -27,7 +27,7 @@ app.use(
   cors({
     origin: true,
     credentials: true,
-  })
+  }),
 );
 
 app.use(bodyParser.json());
@@ -43,7 +43,7 @@ app.use(
       secure: process.env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60,
     },
-  })
+  }),
 );
 
 // Static files AFTER session
@@ -61,14 +61,14 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 const allAsync = (sql, params = []) =>
   new Promise((resolve, reject) =>
-    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)))
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows))),
   );
 
 const runAsync = (sql, params = []) =>
   new Promise((resolve, reject) =>
     db.run(sql, params, function (err) {
       err ? reject(err) : resolve(this);
-    })
+    }),
   );
 
 // -------------------------------
@@ -111,13 +111,13 @@ app.post("/admin/login", async (req, res) => {
       if (!totpCode) {
         return res.json({ requires2FA: true });
       }
-      
+
       // Verify TOTP code
       const isValid = authenticator.verify({
         token: totpCode,
         secret: admin.totp_secret,
       });
-      
+
       if (!isValid) {
         return res.status(401).json({ error: "Invalid 2FA code" });
       }
@@ -138,11 +138,16 @@ app.post("/admin/login", async (req, res) => {
 app.get("/admin/2fa/status", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
-    if (!username) return res.status(400).json({ error: "Username not found in session" });
-    
-    const admins = await allAsync(`SELECT totp_secret FROM Admins WHERE username = ?`, [username]);
-    if (admins.length === 0) return res.status(404).json({ error: "Admin not found" });
-    
+    if (!username)
+      return res.status(400).json({ error: "Username not found in session" });
+
+    const admins = await allAsync(
+      `SELECT totp_secret FROM Admins WHERE username = ?`,
+      [username],
+    );
+    if (admins.length === 0)
+      return res.status(404).json({ error: "Admin not found" });
+
     res.json({ has2FA: !!admins[0].totp_secret });
   } catch (err) {
     console.error("? 2FA status error:", err);
@@ -153,41 +158,45 @@ app.get("/admin/2fa/status", requireAdmin, async (req, res) => {
 app.get("/admin/2fa/setup", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
-    if (!username) return res.status(400).json({ error: "Username not found in session" });
-    
-    const admins = await allAsync(`SELECT * FROM Admins WHERE username = ?`, [username]);
-    if (admins.length === 0) return res.status(404).json({ error: "Admin not found" });
+    if (!username)
+      return res.status(400).json({ error: "Username not found in session" });
+
+    const admins = await allAsync(`SELECT * FROM Admins WHERE username = ?`, [
+      username,
+    ]);
+    if (admins.length === 0)
+      return res.status(404).json({ error: "Admin not found" });
 
     // Generate a new secret
     const secret = authenticator.generateSecret();
     const serviceName = "MOVIN Dance Admin";
     const accountName = username;
-    
+
     // Create OTP Auth URL
     const otpauth = authenticator.keyuri(accountName, serviceName, secret);
-    
+
     // Generate QR code as data URL
     let qrCodeUrl;
     try {
       qrCodeUrl = await QRCode.toDataURL(otpauth, {
-        errorCorrectionLevel: 'M',
-        type: 'image/png',
+        errorCorrectionLevel: "M",
+        type: "image/png",
         quality: 0.92,
-        margin: 1
+        margin: 1,
       });
     } catch (qrErr) {
       console.error("QR code generation error:", qrErr);
       // Continue without QR code - user can use manual entry
       qrCodeUrl = null;
     }
-    
+
     // Store secret temporarily in session (don't save to DB yet)
     req.session.temp2FASecret = secret;
-    
-    res.json({ 
-      secret, 
+
+    res.json({
+      secret,
       qrCode: qrCodeUrl,
-      manualEntryKey: secret // For manual entry if QR code doesn't work
+      manualEntryKey: secret, // For manual entry if QR code doesn't work
     });
   } catch (err) {
     console.error("? 2FA setup error:", err);
@@ -222,17 +231,18 @@ app.post("/admin/2fa/verify", requireAdmin, async (req, res) => {
 app.post("/admin/2fa/enable", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
-    if (!username) return res.status(400).json({ error: "Username not found in session" });
-    
+    if (!username)
+      return res.status(400).json({ error: "Username not found in session" });
+
     const tempSecret = req.session.temp2FASecret;
     if (!tempSecret) {
       return res.status(400).json({ error: "No 2FA setup in progress" });
     }
 
-    await runAsync(
-      `UPDATE Admins SET totp_secret = ? WHERE username = ?`,
-      [tempSecret, username]
-    );
+    await runAsync(`UPDATE Admins SET totp_secret = ? WHERE username = ?`, [
+      tempSecret,
+      username,
+    ]);
 
     delete req.session.temp2FASecret;
     res.json({ success: true });
@@ -245,12 +255,12 @@ app.post("/admin/2fa/enable", requireAdmin, async (req, res) => {
 app.post("/admin/2fa/disable", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
-    if (!username) return res.status(400).json({ error: "Username not found in session" });
-    
-    await runAsync(
-      `UPDATE Admins SET totp_secret = NULL WHERE username = ?`,
-      [username]
-    );
+    if (!username)
+      return res.status(400).json({ error: "Username not found in session" });
+
+    await runAsync(`UPDATE Admins SET totp_secret = NULL WHERE username = ?`, [
+      username,
+    ]);
     res.json({ success: true });
   } catch (err) {
     console.error("? 2FA disable error:", err);
@@ -280,7 +290,7 @@ function requireAdmin(req, res, next) {
 app.get("/admin/bookings", requireAdmin, async (req, res) => {
   try {
     const bookings = await allAsync(
-      `SELECT * FROM Bookings ORDER BY start_date DESC`
+      `SELECT * FROM Bookings ORDER BY start_date DESC`,
     );
     res.json(bookings);
   } catch (err) {
@@ -296,7 +306,7 @@ app.post("/admin/bookings/:id/status", requireAdmin, async (req, res) => {
   try {
     const booking = await allAsync(
       `SELECT * FROM Bookings WHERE booking_id = ?`,
-      [id]
+      [id],
     );
     if (!booking[0])
       return res.status(404).json({ error: "Booking not found" });
@@ -336,8 +346,8 @@ app.post("/admin/bookings/:id/status", requireAdmin, async (req, res) => {
         <p><strong>Booking has been confirmed:</strong></p>
         <p>Name: ${b.name}<br>Email: ${b.email}<br>
         Dates: ${b.start_date}${
-        b.start_date !== b.end_date ? ` to ${b.end_date}` : ""
-      }<br>
+          b.start_date !== b.end_date ? ` to ${b.end_date}` : ""
+        }<br>
         School: ${b.organization || "N/A"}<br>
         Address: ${b.address || "N/A"}<br>
         Participants: ${b.participants || "N/A"}<br>
@@ -365,8 +375,8 @@ app.post("/admin/bookings/:id/status", requireAdmin, async (req, res) => {
         <p><strong>A booking has been denied:</strong></p>
         <p>Name: ${b.name}<br>Email: ${b.email}<br>
         Dates: ${b.start_date}${
-        b.start_date !== b.end_date ? ` to ${b.end_date}` : ""
-      }<br>
+          b.start_date !== b.end_date ? ` to ${b.end_date}` : ""
+        }<br>
         School: ${b.organization || "N/A"}<br>
         Address: ${b.address || "N/A"}<br>
         Participants: ${b.participants || "N/A"}<br>
@@ -383,7 +393,7 @@ app.post("/admin/bookings/:id/status", requireAdmin, async (req, res) => {
         },
         (err) => {
           if (err) console.error("? User email error:", err);
-        }
+        },
       );
       mailer.sendMail(
         {
@@ -394,7 +404,7 @@ app.post("/admin/bookings/:id/status", requireAdmin, async (req, res) => {
         },
         (err) => {
           if (err) console.error("? Admin email error:", err);
-        }
+        },
       );
     }
 
@@ -410,9 +420,7 @@ app.post("/admin/bookings/:id/status", requireAdmin, async (req, res) => {
 // -------------------------------
 app.get("/admin/camps", requireAdmin, async (req, res) => {
   try {
-    const camps = await allAsync(
-      `SELECT * FROM Camps ORDER BY start_date ASC`
-    );
+    const camps = await allAsync(`SELECT * FROM Camps ORDER BY start_date ASC`);
     res.json(camps);
   } catch (err) {
     console.error("? Failed to load camps:", err);
@@ -421,8 +429,17 @@ app.get("/admin/camps", requireAdmin, async (req, res) => {
 });
 
 app.post("/admin/camps", requireAdmin, async (req, res) => {
-  const { camp_name, start_date, end_date, time, location, max_participants, min_age, max_age, status } =
-    req.body;
+  const {
+    camp_name,
+    start_date,
+    end_date,
+    time,
+    location,
+    max_participants,
+    min_age,
+    max_age,
+    status,
+  } = req.body;
   try {
     await runAsync(
       `INSERT INTO Camps (camp_name, start_date, end_date, time, location, max_participants, min_age, max_age, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -436,7 +453,7 @@ app.post("/admin/camps", requireAdmin, async (req, res) => {
         min_age,
         max_age,
         status || "open",
-      ]
+      ],
     );
     res.json({ success: true });
   } catch (err) {
@@ -474,7 +491,7 @@ app.patch("/admin/camps/:id", requireAdmin, async (req, res) => {
     max_participants,
     min_age,
     max_age,
-    status
+    status,
   } = req.body;
 
   try {
@@ -493,8 +510,8 @@ app.patch("/admin/camps/:id", requireAdmin, async (req, res) => {
         min_age,
         max_age,
         status || "open",
-        id
-      ]
+        id,
+      ],
     );
 
     res.json({ success: true });
@@ -509,7 +526,7 @@ app.get("/admin/camps/:id/participants", requireAdmin, async (req, res) => {
   try {
     const participants = await allAsync(
       `SELECT * FROM Participants WHERE camp_id = ?`,
-      [id]
+      [id],
     );
     res.json(participants);
   } catch (err) {
@@ -529,7 +546,13 @@ app.get("/admin/home-camps", requireAdmin, async (req, res) => {
     if (rows.length === 0) {
       // create default row if missing
       await runAsync(`INSERT INTO Home_Camps (id, title) VALUES (1, '')`);
-      return res.json({ id: 1, title: '', image_path: null, featured_camp_1: null, featured_camp_2: null });
+      return res.json({
+        id: 1,
+        title: "",
+        image_path: null,
+        featured_camp_1: null,
+        featured_camp_2: null,
+      });
     }
     res.json(rows[0]);
   } catch (err) {
@@ -547,22 +570,22 @@ app.post("/admin/home-camps", requireAdmin, async (req, res) => {
     const values = [];
 
     if (title !== undefined) {
-      updates.push('title = ?');
+      updates.push("title = ?");
       values.push(title);
     }
 
     if (image_path !== undefined) {
-      updates.push('image_path = ?');
+      updates.push("image_path = ?");
       values.push(image_path || null);
     }
 
     if (featured_camp_1 !== undefined) {
-      updates.push('featured_camp_1 = ?');
+      updates.push("featured_camp_1 = ?");
       values.push(featured_camp_1 || null);
     }
 
     if (featured_camp_2 !== undefined) {
-      updates.push('featured_camp_2 = ?');
+      updates.push("featured_camp_2 = ?");
       values.push(featured_camp_2 || null);
     }
 
@@ -575,9 +598,9 @@ app.post("/admin/home-camps", requireAdmin, async (req, res) => {
 
     await runAsync(
       `UPDATE Home_Camps
-       SET ${updates.join(', ')}
+       SET ${updates.join(", ")}
        WHERE id = ?`,
-      values
+      values,
     );
     res.json({ success: true });
   } catch (err) {
@@ -638,10 +661,9 @@ app.post(
 
     try {
       // Save to database
-      await runAsync(
-        `UPDATE Home_Camps SET image_path = ? WHERE id = 1`,
-        [image_path]
-      );
+      await runAsync(`UPDATE Home_Camps SET image_path = ? WHERE id = 1`, [
+        image_path,
+      ]);
 
       // Just send OK, no JSON needed
       res.send("Image uploaded and DB updated");
@@ -649,18 +671,22 @@ app.post(
       console.error("? DB update error:", err);
       res.status(500).send("Failed to save image to database");
     }
-  }
+  },
 );
 
-app.delete('/admin/home-camps/image', async (req, res) => {
+app.delete("/admin/home-camps/image", async (req, res) => {
   try {
-    const rows = await allAsync('SELECT image_path FROM Home_Camps LIMIT 1');
+    const rows = await allAsync("SELECT image_path FROM Home_Camps LIMIT 1");
     if (!rows || !rows[0].image_path) return res.json({ success: true });
 
     const imagePath = rows[0].image_path;
 
     // Corrected: join __dirname with 'public' and remove leading slash
-    const filePath = path.join(__dirname, 'public', imagePath.replace(/^\//, ''));
+    const filePath = path.join(
+      __dirname,
+      "public",
+      imagePath.replace(/^\//, ""),
+    );
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -669,12 +695,14 @@ app.delete('/admin/home-camps/image', async (req, res) => {
       console.warn(`File not found: ${filePath}`);
     }
 
-    await runAsync('UPDATE Home_Camps SET image_path = NULL');
+    await runAsync("UPDATE Home_Camps SET image_path = NULL");
 
     return res.json({ success: true });
   } catch (err) {
-    console.error('Error deleting home camps image:', err);
-    return res.status(500).json({ success: false, error: 'Failed to delete image' });
+    console.error("Error deleting home camps image:", err);
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to delete image" });
   }
 });
 
@@ -703,8 +731,13 @@ app.get("/api/home-camps", async (req, res) => {
 // Reviews Section
 // -------------------------------
 // Ensure upload directories exist for reviews
-[1, 2, 3].forEach(reviewId => {
-  const reviewDir = path.join(__dirname, "public", "uploads", `review${reviewId}`);
+[1, 2, 3].forEach((reviewId) => {
+  const reviewDir = path.join(
+    __dirname,
+    "public",
+    "uploads",
+    `review${reviewId}`,
+  );
   if (!fs.existsSync(reviewDir)) fs.mkdirSync(reviewDir, { recursive: true });
 });
 
@@ -726,9 +759,11 @@ const reviewUpload = multer({ storage: reviewStorage });
 app.get("/admin/reviews/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const rows = await allAsync(`SELECT * FROM Reviews WHERE review_id = ?`, [id]);
+    const rows = await allAsync(`SELECT * FROM Reviews WHERE review_id = ?`, [
+      id,
+    ]);
     if (!rows.length) {
-      return res.json({ title: '', description: '', image_path: null });
+      return res.json({ title: "", description: "", image_path: null });
     }
     res.json(rows[0]);
   } catch (err) {
@@ -742,24 +777,27 @@ app.post("/admin/reviews/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, image_path } = req.body;
-    
+
     // Check if review exists
-    const existing = await allAsync(`SELECT review_id FROM Reviews WHERE review_id = ?`, [id]);
-    
+    const existing = await allAsync(
+      `SELECT review_id FROM Reviews WHERE review_id = ?`,
+      [id],
+    );
+
     if (existing.length === 0) {
       // Create new review
       await runAsync(
         `INSERT INTO Reviews (review_id, title, description, image_path) VALUES (?, ?, ?, ?)`,
-        [id, title, description, image_path || null]
+        [id, title, description, image_path || null],
       );
     } else {
       // Update existing review
       await runAsync(
         `UPDATE Reviews SET title = ?, description = ?, image_path = ? WHERE review_id = ?`,
-        [title, description, image_path || null, id]
+        [title, description, image_path || null, id],
       );
     }
-    
+
     res.json({ success: true });
   } catch (err) {
     console.error("Failed to update review:", err);
@@ -780,17 +818,20 @@ app.post(
 
     try {
       // Update database
-      const existing = await allAsync(`SELECT review_id FROM Reviews WHERE review_id = ?`, [reviewId]);
-      
+      const existing = await allAsync(
+        `SELECT review_id FROM Reviews WHERE review_id = ?`,
+        [reviewId],
+      );
+
       if (existing.length === 0) {
         await runAsync(
           `INSERT INTO Reviews (review_id, title, description, image_path) VALUES (?, ?, ?, ?)`,
-          [reviewId, '', '', image_path]
+          [reviewId, "", "", image_path],
         );
       } else {
         await runAsync(
           `UPDATE Reviews SET image_path = ? WHERE review_id = ?`,
-          [image_path, reviewId]
+          [image_path, reviewId],
         );
       }
 
@@ -799,18 +840,26 @@ app.post(
       console.error("DB update error:", err);
       res.status(500).send("Failed to save image to database");
     }
-  }
+  },
 );
 
 // Delete image for a review
 app.delete("/admin/reviews/:id/image", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const rows = await allAsync(`SELECT image_path FROM Reviews WHERE review_id = ?`, [id]);
-    if (!rows || !rows[0] || !rows[0].image_path) return res.json({ success: true });
+    const rows = await allAsync(
+      `SELECT image_path FROM Reviews WHERE review_id = ?`,
+      [id],
+    );
+    if (!rows || !rows[0] || !rows[0].image_path)
+      return res.json({ success: true });
 
     const imagePath = rows[0].image_path;
-    const filePath = path.join(__dirname, "public", imagePath.replace(/^\//, ""));
+    const filePath = path.join(
+      __dirname,
+      "public",
+      imagePath.replace(/^\//, ""),
+    );
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -819,15 +868,18 @@ app.delete("/admin/reviews/:id/image", requireAdmin, async (req, res) => {
       console.warn(`File not found: ${filePath}`);
     }
 
-    await runAsync(`UPDATE Reviews SET image_path = NULL WHERE review_id = ?`, [id]);
+    await runAsync(`UPDATE Reviews SET image_path = NULL WHERE review_id = ?`, [
+      id,
+    ]);
 
     return res.json({ success: true });
   } catch (err) {
     console.error("Error deleting review image:", err);
-    return res.status(500).json({ success: false, error: "Failed to delete image" });
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to delete image" });
   }
 });
-
 
 app.get("/api/available-camps", async (req, res) => {
   try {
@@ -866,7 +918,7 @@ app.get("/api/reviews", async (req, res) => {
 app.get("/admin/days-off", requireAdmin, async (req, res) => {
   try {
     const daysOff = await allAsync(
-      `SELECT * FROM Days_Off ORDER BY start_date ASC`
+      `SELECT * FROM Days_Off ORDER BY start_date ASC`,
     );
     res.json(daysOff);
   } catch (err) {
@@ -880,7 +932,7 @@ app.post("/admin/days-off", requireAdmin, async (req, res) => {
   try {
     await runAsync(
       `INSERT INTO Days_Off (start_date, end_date, description) VALUES (?, ?, ?)`,
-      [start_date, end_date, description]
+      [start_date, end_date, description],
     );
     res.json({ success: true });
   } catch (err) {
@@ -895,7 +947,7 @@ app.patch("/admin/days-off/:id", requireAdmin, async (req, res) => {
   try {
     await runAsync(
       `UPDATE Days_Off SET start_date = ?, end_date = ?, description = ? WHERE days_off_id = ?`,
-      [start_date, end_date, description, id]
+      [start_date, end_date, description, id],
     );
     res.json({ success: true });
   } catch (err) {
@@ -907,10 +959,7 @@ app.patch("/admin/days-off/:id", requireAdmin, async (req, res) => {
 app.delete("/admin/days-off/:id", requireAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    await runAsync(
-      `DELETE FROM Days_Off WHERE days_off_id = ?`,
-      [id]
-    );
+    await runAsync(`DELETE FROM Days_Off WHERE days_off_id = ?`, [id]);
     res.json({ success: true });
   } catch (err) {
     console.error("? Failed to delete days off:", err);
@@ -924,36 +973,41 @@ app.delete("/admin/days-off/:id", requireAdmin, async (req, res) => {
 app.get("/admin/export/:table", requireAdmin, async (req, res) => {
   const { table } = req.params;
   const allowedTables = ["Bookings", "Camps", "Participants", "Days_Off"];
-  
-  if (!allowedTables.includes(table)) return res.status(400).json({ error: "Invalid table" });
+
+  if (!allowedTables.includes(table))
+    return res.status(400).json({ error: "Invalid table" });
 
   try {
     const rows = await allAsync(`SELECT * FROM ${table}`);
-    if (!rows.length) return res.status(404).json({ error: "No data to export" });
+    if (!rows.length)
+      return res.status(404).json({ error: "No data to export" });
 
     // Convert rows to CSV
     const headers = Object.keys(rows[0]);
     const csv = [
       headers.join(","), // header row
-      ...rows.map(row => headers.map(h => {
-        let val = row[h] === null || row[h] === undefined ? "" : row[h].toString();
-        // Escape quotes & wrap in quotes if necessary
-        return val.includes(",") || val.includes("\n") || val.includes('"')
-          ? `"${val.replace(/"/g, '""')}"`
-          : val;
-      }).join(","))
+      ...rows.map((row) =>
+        headers
+          .map((h) => {
+            let val =
+              row[h] === null || row[h] === undefined ? "" : row[h].toString();
+            // Escape quotes & wrap in quotes if necessary
+            return val.includes(",") || val.includes("\n") || val.includes('"')
+              ? `"${val.replace(/"/g, '""')}"`
+              : val;
+          })
+          .join(","),
+      ),
     ].join("\n");
 
     res.header("Content-Type", "text/csv");
     res.attachment(`${table}.csv`);
     res.send(csv);
-
   } catch (err) {
     console.error(`Error exporting ${table}:`, err);
     res.status(500).json({ error: "Failed to export table" });
   }
 });
-
 
 // -------------------------------
 // Public API: unavailable dates
@@ -961,10 +1015,10 @@ app.get("/admin/export/:table", requireAdmin, async (req, res) => {
 app.get("/api/unavailable", async (req, res) => {
   try {
     const bookings = await allAsync(
-      `SELECT start_date, end_date FROM Bookings WHERE status = 'confirmed'`
+      `SELECT start_date, end_date FROM Bookings WHERE status = 'confirmed'`,
     );
     const camps = await allAsync(
-      `SELECT start_date, end_date FROM Camps WHERE status != 'past'`
+      `SELECT start_date, end_date FROM Camps WHERE status != 'past'`,
     );
     const daysOff = await allAsync(`SELECT start_date, end_date FROM Days_Off`);
 
@@ -1018,11 +1072,11 @@ app.post("/api/bookings", async (req, res) => {
         address,
         participants,
         details,
-      ]
+      ],
     );
 
     const newBooking = await allAsync(
-      `SELECT * FROM Bookings WHERE rowid = last_insert_rowid()`
+      `SELECT * FROM Bookings WHERE rowid = last_insert_rowid()`,
     );
     const b = newBooking[0];
 
@@ -1030,9 +1084,11 @@ app.post("/api/bookings", async (req, res) => {
     const userHtml = `
       <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
         <p>Hi ${b.name},</p>
-        <p>${b.start_date === b.end_date
-          ? `Your booking for <strong>${b.start_date}</strong> is received and pending review.`
-          : `Your booking from <strong>${b.start_date}</strong> to <strong>${b.end_date}</strong> is received and pending review.`}</p>
+        <p>${
+          b.start_date === b.end_date
+            ? `Your booking for <strong>${b.start_date}</strong> is received and pending review.`
+            : `Your booking from <strong>${b.start_date}</strong> to <strong>${b.end_date}</strong> is received and pending review.`
+        }</p>
         <p><strong>Booking details:</strong><br>
            School: ${b.organization || "N/A"}<br>
            Address: ${b.address || "N/A"}<br>
@@ -1056,12 +1112,26 @@ app.post("/api/bookings", async (req, res) => {
     `;
 
     mailer.sendMail(
-      { from: process.env.EMAIL_USER, to: b.email, subject: userSubject, html: userHtml },
-      (err) => { if (err) console.error("? User pending email error:", err); }
+      {
+        from: process.env.EMAIL_USER,
+        to: b.email,
+        subject: userSubject,
+        html: userHtml,
+      },
+      (err) => {
+        if (err) console.error("? User pending email error:", err);
+      },
     );
     mailer.sendMail(
-      { from: process.env.EMAIL_USER, to: process.env.EMAIL_USER, subject: adminSubject, html: adminHtml },
-      (err) => { if (err) console.error("? Admin pending email error:", err); }
+      {
+        from: process.env.EMAIL_USER,
+        to: process.env.EMAIL_USER,
+        subject: adminSubject,
+        html: adminHtml,
+      },
+      (err) => {
+        if (err) console.error("? Admin pending email error:", err);
+      },
     );
 
     res.json({ success: true });
@@ -1098,10 +1168,13 @@ app.get("/api/camps", async (req, res) => {
 // -------------------------------
 app.post("/api/camps/:id/register", async (req, res) => {
   const { id } = req.params;
-  const { registration_name, participant_name, email, birth_date, details } = req.body;
+  const { registration_name, participant_name, email, birth_date, details } =
+    req.body;
 
   try {
-    const camp = (await allAsync(`SELECT * FROM Camps WHERE camp_id = ?`, [id]))[0];
+    const camp = (
+      await allAsync(`SELECT * FROM Camps WHERE camp_id = ?`, [id])
+    )[0];
     if (!camp) return res.status(404).json({ error: "Camp not found" });
 
     // ----------- AGE CHECK -----------
@@ -1112,7 +1185,7 @@ app.post("/api/camps/:id/register", async (req, res) => {
     if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
     if (age < camp.min_age || age > camp.max_age) {
       return res.status(400).json({
-        error: `Participant age must be between ${camp.min_age} and ${camp.max_age}`
+        error: `Participant age must be between ${camp.min_age} and ${camp.max_age}`,
       });
     }
     // -------------------------------
@@ -1120,7 +1193,7 @@ app.post("/api/camps/:id/register", async (req, res) => {
     await runAsync(
       `INSERT INTO Participants (camp_id, registration_name, participant_name, email, birth_date, details)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, registration_name, participant_name, email, birth_date, details]
+      [id, registration_name, participant_name, email, birth_date, details],
     );
 
     const userHtml = `
@@ -1147,8 +1220,18 @@ app.post("/api/camps/:id/register", async (req, res) => {
       </div>
     `;
 
-    mailer.sendMail({ from: process.env.EMAIL_USER, to: email, subject: "Camp Registration", html: userHtml });
-    mailer.sendMail({ from: process.env.EMAIL_USER, to: process.env.EMAIL_USER, subject: "New Camp Participant", html: adminHtml });
+    mailer.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Camp Registration",
+      html: userHtml,
+    });
+    mailer.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "New Camp Participant",
+      html: adminHtml,
+    });
 
     res.json({ success: true });
   } catch (err) {
@@ -1163,7 +1246,9 @@ app.post("/api/camps/:id/register", async (req, res) => {
 // Ensure reminder_sent column exists (for existing databases)
 async function ensureReminderColumnExists() {
   try {
-    await runAsync(`ALTER TABLE Participants ADD COLUMN reminder_sent INTEGER DEFAULT 0`);
+    await runAsync(
+      `ALTER TABLE Participants ADD COLUMN reminder_sent INTEGER DEFAULT 0`,
+    );
     console.log("? Added reminder_sent column to Participants table");
   } catch (err) {
     // Column might already exist, which is fine
@@ -1178,25 +1263,31 @@ async function sendCampReminders() {
     const now = new Date();
     const targetDate = new Date(now);
     targetDate.setHours(targetDate.getHours() + 24);
-    const targetDateStr = targetDate.toISOString().split('T')[0];
+    const targetDateStr = targetDate.toISOString().split("T")[0];
 
-    const camps = await allAsync(`
+    const camps = await allAsync(
+      `
       SELECT camp_id, camp_name, start_date, end_date, time, location
       FROM Camps
       WHERE date(start_date) = date(?)
         AND status IN ('open', 'closed')
-    `, [targetDateStr]);
+    `,
+      [targetDateStr],
+    );
 
     if (camps.length === 0) return;
 
     let totalSent = 0;
 
     for (const camp of camps) {
-      const participants = await allAsync(`
+      const participants = await allAsync(
+        `
         SELECT participants_id, registration_name, participant_name, email
         FROM Participants
         WHERE camp_id = ? AND (reminder_sent IS NULL OR reminder_sent = 0)
-      `, [camp.camp_id]);
+      `,
+        [camp.camp_id],
+      );
 
       for (const p of participants) {
         const reminderHtml = `
@@ -1209,7 +1300,7 @@ async function sendCampReminders() {
                End Date: ${camp.end_date}<br>
                Time: ${camp.time}<br>
                Location: ${camp.location || "TBA"}</p>
-            ${p.participant_name ? `<p>Participant: ${p.participant_name}</p>` : ''}
+            ${p.participant_name ? `<p>Participant: ${p.participant_name}</p>` : ""}
             <p>We look forward to seeing you there!</p>
             <p>Thank you,<br>MOVIN Dance<br>movindance.com</p>
           </div>
@@ -1217,20 +1308,26 @@ async function sendCampReminders() {
 
         try {
           await new Promise((resolve, reject) => {
-            mailer.sendMail({
-              from: process.env.EMAIL_USER,
-              to: p.email,
-              subject: `Reminder: ${camp.camp_name} Starts Tomorrow`,
-              html: reminderHtml,
-            }, (err) => err ? reject(err) : resolve());
+            mailer.sendMail(
+              {
+                from: process.env.EMAIL_USER,
+                to: p.email,
+                subject: `Reminder: ${camp.camp_name} Starts Tomorrow`,
+                html: reminderHtml,
+              },
+              (err) => (err ? reject(err) : resolve()),
+            );
           });
 
-          await runAsync(`
+          await runAsync(
+            `
             UPDATE Participants SET reminder_sent = 1 WHERE participants_id = ?
-          `, [p.participants_id]);
+          `,
+            [p.participants_id],
+          );
 
           totalSent++;
-          await new Promise(r => setTimeout(r, 500)); // Delay between emails
+          await new Promise((r) => setTimeout(r, 500)); // Delay between emails
         } catch (err) {
           console.error(`? Error sending reminder to ${p.email}:`, err);
         }
@@ -1241,7 +1338,7 @@ async function sendCampReminders() {
       console.log(`? Camp reminders sent: ${totalSent} emails`);
     }
   } catch (err) {
-    console.error('? Error in sendCampReminders:', err);
+    console.error("? Error in sendCampReminders:", err);
   }
 }
 
@@ -1253,7 +1350,7 @@ ensureReminderColumnExists().then(() => {
   app.listen(PORT, () => {
     console.log(`? Server running on port ${PORT}`);
     console.log(`? Camp reminder system initialized (checks every hour)`);
-    
+
     // Run immediately on startup, then every hour
     sendCampReminders();
     setInterval(sendCampReminders, 60 * 60 * 1000);
