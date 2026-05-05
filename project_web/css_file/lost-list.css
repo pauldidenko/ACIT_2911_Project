@@ -94,6 +94,21 @@
     color: black;
 }
 
+.status.found {
+    background-color: #86efac;
+    color: black;
+}
+
+.status.claimed {
+    background-color: #bfdbfe;
+    color: black;
+}
+
+.status.deleted {
+    background-color: #d1d5db;
+    color: black;
+}
+
 .action-btn {
     display: inline-block;
     margin: 3px;
@@ -121,6 +136,19 @@
 .action-btn:hover {
     background-color: black;
     color: white;
+}
+
+.catalog-pagination {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.catalog-pagination .action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 @media screen and (max-width: 842px) {
