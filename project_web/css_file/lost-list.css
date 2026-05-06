@@ -11,6 +11,24 @@
     box-shadow: 4px 4px 0px 0px #000000;
 }
 
+.search-btn {
+    background-color: #f472b6;
+    color: black;
+    padding: 12px 18px;
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    box-shadow: 3px 3px 0px 0px #000000;
+    cursor: pointer;
+}
+
+.search-btn:hover {
+    background-color: black;
+    color: white;
+}
+
+
 .lost-catalog {
     max-width: 99%;
     margin: 5px auto 20px auto;
@@ -66,14 +84,30 @@
     width: 100%;
     border-collapse: collapse;
     background-color: #fefce8;
+}
+.lost-table tbody tr:hover {
+    background-color: #fff7cc;
+}
+.table-wrapper {
+    overflow-x: auto;
     border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0px 0px #000000;
+    background-color: #fefce8;
+}
+
+.lost-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fefce8;
 }
 
 .lost-table th,
 .lost-table td {
-    padding: 14px 16px;
+    padding: 16px 20px;
     text-align: left;
-    border-bottom: 2px solid black;
+    border-bottom: 1.5px solid black;
 }
 
 .lost-table th {
@@ -86,6 +120,19 @@
     border-bottom: none;
 }
 
+/* rounded top corners */
+.lost-table th:first-child {
+    border-top-left-radius: 8px;
+}
+
+.lost-table th:last-child {
+    border-top-right-radius: 8px;
+}
+
+/* row hover */
+.lost-table tbody tr:hover {
+    background-color: #fff7cc;
+}
 .status {
     display: inline-block;
     padding: 6px 12px;
