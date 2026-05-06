@@ -101,7 +101,9 @@ app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body ?? {};
 
   if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Username and password are required" });
   }
 
   try {
@@ -172,18 +174,20 @@ app.get("/api/admin/items", requireAdmin, async (req, res) => {
   const sortBy =
     allowedSortColumns[String(req.query.sortBy || "date_reported")] ||
     "date_reported";
-  const sortDir = String(req.query.sortDir || "desc").toLowerCase() === "asc"
-    ? "ASC"
-    : "DESC";
-  const sortExpression = sortBy === "date_reported"
-    ? "datetime(date_reported)"
-    : sortBy;
+  const sortDir =
+    String(req.query.sortDir || "desc").toLowerCase() === "asc"
+      ? "ASC"
+      : "DESC";
+  const sortExpression =
+    sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
 
   const where = [];
   const params = [];
 
   if (search) {
-    where.push("(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)");
+    where.push(
+      "(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)",
+    );
     const searchLike = `%${search}%`;
     params.push(searchLike, searchLike, searchLike);
   }
