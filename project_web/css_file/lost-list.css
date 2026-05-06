@@ -1,0 +1,163 @@
+/* Lost Items Catalog */
+
+.lost-catalog {
+    max-width: 99%;
+    margin: 5px auto 20px auto;
+    padding: 30px clamp(20px, 5vw, 80px);
+
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.catalog-header h2 {
+    margin: 0;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.catalog-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.search-box,
+.filter-box {
+    padding: 12px 15px;
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 1rem;
+    background-color: white;
+    box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 230px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.lost-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fefce8;
+    border: 2px solid black;
+}
+
+.lost-table th,
+.lost-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 2px solid black;
+}
+
+.lost-table th {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+}
+
+.lost-table tr:last-child td {
+    border-bottom: none;
+}
+
+.status {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 2px solid black;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.status.lost {
+    background-color: #f472b6;
+    color: black;
+}
+
+.status.returned {
+    background-color: #86efac;
+    color: black;
+}
+
+.status.found {
+    background-color: #86efac;
+    color: black;
+}
+
+.status.claimed {
+    background-color: #bfdbfe;
+    color: black;
+}
+
+.status.deleted {
+    background-color: #d1d5db;
+    color: black;
+}
+
+.action-btn {
+    display: inline-block;
+    margin: 3px;
+    padding: 7px 10px;
+    border: 2px solid black;
+    border-radius: 8px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.view-btn {
+    background-color: #bfdbfe;
+}
+
+.edit-btn {
+    background-color: #fef08a;
+}
+
+.delete-btn {
+    background-color: #fca5a5;
+}
+
+.action-btn:hover {
+    background-color: black;
+    color: white;
+}
+
+.catalog-pagination {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.catalog-pagination .action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media screen and (max-width: 842px) {
+    .catalog-controls {
+        flex-direction: column;
+    }
+
+    .search-box,
+    .filter-box {
+        width: 100%;
+    }
+}

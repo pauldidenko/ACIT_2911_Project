@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCIT lost and found | Catalog</title>
+    <link rel="stylesheet" href="./css_file/style.css">
+    <link rel="stylesheet" href="./css_file/lost-list.css">
+</head>
+<body>
+    <header class="navbar">
+        <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
+        <nav class="nav-links">
+            <ul class="nav-list">
+                <li><a href="index.html" class="home">Home</a></li>
+                <li><a href="catalog.html" class="catalog">Catalog</a></li>
+                <li><a href="account.html" class="account">Account</a></li>
+                <li><a href="#" id="logoutBtn" class="login">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="lost-catalog">
+        <div class="catalog-header">
+            <h2>Items Catalog</h2>
+            <a href="add-lost-item.html" class="catalog-add-btn">+ Add Item</a>
+        </div>
+
+        <div class="catalog-controls">
+            <input id="searchInput" type="text" placeholder="Search item, notes, or location..." class="search-box">
+
+            <select id="categoryFilter" class="filter-box">
+                <option value="">All Categories</option>
+                <option>Electronics</option>
+                <option>Accessories</option>
+                <option>Clothing</option>
+                <option>Keys & ID</option>
+                <option>School Supplies</option>
+                <option>Bottles & containers</option>
+                <option>Sports & Fitness</option>
+                <option>Documents</option>
+                <option>Misc</option>
+            </select>
+
+            <select id="statusFilter" class="filter-box">
+                <option value="">All Statuses</option>
+                <option value="lost">Lost</option>
+                <option value="found">Found</option>
+                <option value="claimed">Claimed</option>
+                <option value="deleted">Deleted</option>
+            </select>
+
+            <select id="campusFilter" class="filter-box">
+                <option value="">All Campuses</option>
+                <option>Burnaby</option>
+                <option>Downtown</option>
+                <option>Aerospace</option>
+            </select>
+
+            <input id="dateFromFilter" type="date" class="filter-box">
+
+            <select id="sortBy" class="filter-box">
+                <option value="date_reported">Sort: Date Reported</option>
+                <option value="item_name">Sort: Item Name</option>
+                <option value="category">Sort: Category</option>
+                <option value="campus">Sort: Campus</option>
+                <option value="status">Sort: Status</option>
+            </select>
+
+            <select id="sortDir" class="filter-box">
+                <option value="desc">Order: Descending</option>
+                <option value="asc">Order: Ascending</option>
+            </select>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="lost-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Date Reported</th>
+                        <th>Campus</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="catalogBody"></tbody>
+            </table>
+        </div>
+
+        <div class="catalog-pagination">
+            <button id="prevPageBtn" class="action-btn view-btn" type="button">Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPageBtn" class="action-btn view-btn" type="button">Next</button>
+        </div>
+    </section>
+
+    <script>
+        const PAGE_SIZE = 10;
+        let currentPage = 1;
+        let currentTotalPages = 1;
+
+        const searchInput = document.getElementById("searchInput");
+        const categoryFilter = document.getElementById("categoryFilter");
+        const statusFilter = document.getElementById("statusFilter");
+        const campusFilter = document.getElementById("campusFilter");
+        const dateFromFilter = document.getElementById("dateFromFilter");
+        const sortBy = document.getElementById("sortBy");
+        const sortDir = document.getElementById("sortDir");
+        const catalogBody = document.getElementById("catalogBody");
+        const prevPageBtn = document.getElementById("prevPageBtn");
+        const nextPageBtn = document.getElementById("nextPageBtn");
+        const pageInfo = document.getElementById("pageInfo");
+        const logoutBtn = document.getElementById("logoutBtn");
+
+        function formatDate(value) {
+            if (!value) return "-";
+            const dt = new Date(value);
+            if (Number.isNaN(dt.getTime())) return value;
+            return dt.toLocaleDateString();
+        }
+
+        function toTitleCase(value) {
+            if (!value) return "-";
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
+        function renderRows(items) {
+            if (!items.length) {
+                catalogBody.innerHTML = '<tr><td colspan="6">No items found.</td></tr>';
+                return;
+            }
+
+            catalogBody.innerHTML = items.map((item) => `
+                <tr>
+                    <td>${item.item_name ?? "-"}</td>
+                    <td>${item.category ?? "-"}</td>
+                    <td>${formatDate(item.date_reported)}</td>
+                    <td>${item.campus ?? "-"}</td>
+                    <td><span class="status ${item.status}">${toTitleCase(item.status)}</span></td>
+                    <td>
+                        <a href="#" class="action-btn view-btn">View</a>
+                        <a href="#" class="action-btn edit-btn">Edit</a>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        function updatePagination(page, totalPages) {
+            currentPage = page;
+            currentTotalPages = totalPages;
+            pageInfo.textContent = `Page ${page} of ${totalPages}`;
+            prevPageBtn.disabled = page <= 1;
+            nextPageBtn.disabled = page >= totalPages;
+        }
+
+        async function loadItems() {
+            const params = new URLSearchParams({
+                page: String(currentPage),
+                limit: String(PAGE_SIZE),
+                search: searchInput.value.trim(),
+                category: categoryFilter.value,
+                status: statusFilter.value,
+                campus: campusFilter.value,
+                dateFrom: dateFromFilter.value,
+                sortBy: sortBy.value,
+                sortDir: sortDir.value
+            });
+
+            const response = await fetch(`/api/admin/items?${params.toString()}`, {
+                credentials: "include"
+            });
+
+            if (response.status === 401) {
+                window.location.href = "/index.html";
+                return;
+            }
+
+            const data = await response.json();
+            if (!response.ok) {
+                catalogBody.innerHTML = `<tr><td colspan="6">${data.error || "Failed to load items."}</td></tr>`;
+                return;
+            }
+
+            renderRows(data.items || []);
+            updatePagination(data.pagination.page, data.pagination.totalPages);
+        }
+
+        function onFilterChange() {
+            currentPage = 1;
+            loadItems();
+        }
+
+        let searchDebounce;
+        searchInput.addEventListener("input", () => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(onFilterChange, 250);
+        });
+
+        [categoryFilter, statusFilter, campusFilter, dateFromFilter, sortBy, sortDir].forEach((el) => {
+            el.addEventListener("change", onFilterChange);
+        });
+
+        prevPageBtn.addEventListener("click", () => {
+            if (currentPage <= 1) return;
+            currentPage -= 1;
+            loadItems();
+        });
+
+        nextPageBtn.addEventListener("click", () => {
+            if (currentPage >= currentTotalPages) return;
+            currentPage += 1;
+            loadItems();
+        });
+
+        logoutBtn.addEventListener("click", async (event) => {
+            event.preventDefault();
+            try {
+                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+            } catch (_error) {
+                // ignore
+            }
+            window.location.href = "/index.html";
+        });
+
+        loadItems();
+    </script>
+</body>
+</html>

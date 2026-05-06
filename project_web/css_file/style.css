@@ -1,18 +1,101 @@
+@font-face {
+    font-family: 'Inter';
+    src: url('./font/Inter-VariableFont_opsz,wght.ttf');
+}
+
 * {
     box-sizing: border-box;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Inter', 'Arial', 'sans-serif', 'Times New Roman', 'Helvetica', 'Segoe UI';
   }
 
 @media screen and (max-width:842px){
 
-.container{
-    flex-direction:column;
-}
+    .hero h1 {
+        font-size: clamp(1rem, 4vw, 2rem);
+        text-align: center;
+    }
+
+    .campus {
+        flex-direction: column;
+        gap: 20px;
+        padding: 10px;
+        max-width: 89%;
+        margin: 5px auto;
+        margin-top: 20px;
+    }
+
+    .campus-item{
+        flex-direction:column;
+        width: 85%;
+    }
+    
+    .campus-item img {
+        width: 100%;
+        height: 220px;
+    }
+
+    .campus-item h2 {
+        font-size: clamp(1rem, 4vw, 2rem);
+        text-align: center;
+        gap: 0;
+    }
+
+    .logo {
+        gap: 0;
+    }
+
+    .logo1 {
+        font-size: 1.2rem;
+    }
 
 }
 
-body {
-    font-family: Arial, sans-serif;
+@media screen and (max-width: 600px) {
+    .hero h1 {
+        font-size: clamp(1rem, 4vw, 2rem);
+        text-align: center;
+    }
+    
+    .card {
+        flex: 0 1 30%;
+    }
+
+    .campus {
+        flex-direction: column;
+    }
+
+    .campus-item {
+        width: 90%;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .campus-item img {
+        width: 100%;
+        max-width: 100%;
+        height: 220px;
+        object-fit: cover;
+    }
+
+    .campus-item h2 {
+        font-size: 1.2rem;
+        text-align: center;
+        gap: 0;
+    }
+
+    .logo {
+        gap: 0;
+    }
+
+    .logo1 {
+        font-size: 1.0rem;
+    }
+
+}
+
+
+body {  
+    overflow-x: hidden;
     margin: 0;
     background-color: #fefce8;
 }
@@ -20,22 +103,23 @@ body {
 .navbar{
     display: flex;
     justify-content: space-between;
-    gap: 20px;
+    gap: 5px;
     align-items: center;
     background-color: #3b82f6;
     box-shadow: 4px 4px 0px 0px #000000;
     border-radius: 10px;
-    height: 80px;
-    max-width: 99%;
+    min-height: 80px;
+    height: auto;
+    max-width: 98%;
     margin: 5px auto;
-    padding: 20px;
+    padding: 2px 15px;
     top: auto;
     border: 2px solid black;
 }
 
 .nav-list {
     display: flex;
-    gap: 20px;
+    gap: 5px;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -45,7 +129,7 @@ body {
     display: block;
     text-decoration: none;
     color: white;
-    padding: 10px 15px;
+    padding: 10px 11px;
     font-size: clamp(0.8rem, 2vw, 1.3rem);
     font-weight: bold;
 }
@@ -53,12 +137,13 @@ body {
 .nav-list .login {
     background-color: white;
     color: rgb(45, 143, 255);
-    padding: 8px 16px;
+    padding: 8px 10px;
     border-radius: 10px;
     text-decoration: none;
     font-weight: bold;
     border: 2px solid black;
     box-shadow: 4px 4px 0px 0px #000000;
+    max-width: 98%;
 }
 
 .nav-list .login:hover {
@@ -67,11 +152,65 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.logo a{
-    font-family: 'Arial', sans-serif;
-    font-weight: 700;
-    font-size: clamp(1rem, 5vw, 3rem);
+.nav-list .Signup {
+    background-color: white;
+    color: rgb(45, 143, 255);
+    padding: 8px 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    border: 2px solid black;
+    box-shadow: 4px 4px 0px 0px #000000;
+    max-width: 98%;
+}
+
+.nav-list .Signup:hover {
+    background-color: black;
+    color: white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.logo{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo1{
+    font-size: clamp(1.5rem, 4vw, 3rem);
     text-decoration: none; 
     color: white;
 }
 
+.footer {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 10px;
+    max-width: 98%;
+    margin: 5px auto;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border: 2px solid black;
+    padding: 30px 20px;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    text-align: center;
+}
+
+.footer-left,
+.footer-center,
+.footer-right {
+    width: 100%;
+}
+
+.footer a {
+    color: white;
+    text-decoration: none;
+}
+
+.copyright {
+    grid-column: 1 / 4;
+    text-align: center;
+    margin-top: 20px;
+}
