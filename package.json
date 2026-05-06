@@ -17,8 +17,8 @@
   "scripts": {
     "start": "node app.js",
     "test": "node --test tests/",
-    "test:unit": "node --test tests/unit_test.js",
-    "test:integration": "node --test tests/integration_test.js"
+    "test:unit": "node --test tests/unit.test.js",
+    "test:integration": "node --test tests/integration.test.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
