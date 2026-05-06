@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BCIT lost and found | Account</title>
     <link rel="stylesheet" href="./css_file/style.css">
+     <link rel="stylesheet" href="./css_file/account.css">
 </head>
+
 <body>
     <header class="navbar">
         <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
@@ -19,6 +22,76 @@
         </nav>
     </header>
 
+
+    <section class="account-hero">
+        <div class="account-hero-content">
+            <h1>Admin Account</h1>
+        </div>
+    </section>
+
+    <section class="account-section">
+
+        <div class="account-grid">
+
+            <div class="account-card profile-card">
+                <h2>Account Information</h2>
+
+                <div class="account-info-row">
+                    <span>Username:</span>
+                    <strong>admin</strong>
+                </div>
+
+                <div class="account-info-row">
+                    <span>Role:</span>
+                    <strong>Security Admin</strong>
+                </div>
+
+                <div class="account-info-row">
+                    <span>Access:</span>
+                    <strong>BCIT Lost and Found Catalog</strong>
+                </div>
+
+                <div class="account-info-row">
+                    <span>Status:</span>
+                    <strong class="active-status">Active</strong>
+                </div>
+            </div>
+
+            <div class="account-card">
+                <h2>Quick Actions</h2>
+
+                <div class="quick-actions">
+                    <a href="catalog.html" class="account-btn">View Catalog</a>
+                    <a href="add-lost-item.html" class="account-btn">+ Add Item</a>
+                    <a href="index.html" class="account-btn secondary-btn">Back to Home</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Items</h3>
+                <p>25</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Lost</h3>
+                <p>10</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Found</h3>
+                <p>9</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Returned</h3>
+                <p>6</p>
+            </div>
+        </div>
+
+    </section>
     <main class="card">
         <div class="container"></div>
     </main>
@@ -35,4 +108,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,0 +1,132 @@
+.account-hero {
+    max-width: 99%;
+    min-height: 120px;
+    margin: 5px auto;
+    padding: 30px clamp(30px, 5vw, 80px);
+
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0px 0px #000000;
+
+    display: flex;
+    align-items: center;
+}
+
+.account-hero-content h1 {
+    margin: 0 0 10px 0;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: black;
+}
+
+.account-hero-content p {
+    margin: 0;
+    font-size: clamp(0.95rem, 2vw, 1.1rem);
+    color: black;
+}
+
+.account-section {
+    max-width: 99%;
+    margin: 5px auto 20px auto;
+    padding: 30px clamp(20px, 5vw, 80px);
+
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.account-card,
+.stat-card {
+    background-color: #fefce8;
+    border: 2px solid black;
+    border-radius: 12px;
+    box-shadow: 4px 4px 0px 0px #000000;
+    padding: 25px;
+}
+
+.account-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+.account-info-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1.5px solid black;
+}
+
+.account-info-row:last-child {
+    border-bottom: none;
+}
+
+.active-status {
+    color: green;
+}
+
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.account-btn {
+    display: inline-block;
+    text-align: center;
+    background-color: #f472b6;
+    color: black;
+    padding: 12px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+    border: 2px solid black;
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.secondary-btn {
+    background-color: white;
+}
+
+.account-btn:hover {
+    background-color: black;
+    color: white;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.stat-card {
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1rem;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #3b82f6;
+}
+
+@media screen and (max-width: 842px) {
+    .account-grid,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
