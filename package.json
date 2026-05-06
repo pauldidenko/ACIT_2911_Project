@@ -16,9 +16,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "node --test tests/",
-    "test:unit": "node --test tests/unit.test.js",
-    "test:integration": "node --test tests/integration.test.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -27,6 +25,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
+    "multer": "^2.1.1",
     "sqlite3": "^6.0.1"
   }
 }

@@ -1,3 +1,34 @@
+/*
+ * add-item.css — styles for `add-item.html` only (linked after `style.css`).
+ *
+ * Teammates:
+ * - Layout: white “card” sections with thick black border + offset shadow (matches catalog).
+ * - `#pageBanner`: success (green) / error (red) messages from add-item.js after save.
+ * - Form is a 2-column grid; `.full-width` spans both columns; stacks to one column under ~842px.
+ * - Save/Cancel buttons: `.save-btn` / `.cancel-btn` at bottom of form.
+ */
+
+/* ========= Success / error banner (filled by JS) ========= */
+.page-banner {
+    max-width: 99%;
+    margin: 8px auto;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 2px solid black;
+    box-shadow: 3px 3px 0px 0px #000000;
+    font-weight: bold;
+}
+
+.page-banner.success {
+    background-color: #dcfce7;
+    color: #14532d;
+}
+
+.page-banner.error {
+    background-color: #fef2f2;
+    color: #991b1b;
+}
+
 .lost-hero {
     max-width: 99%;
     min-height: 120px;
@@ -26,7 +57,7 @@
     color: black;
 }
 
-
+/* ========= Form card ========= */
 .add-item-section {
     max-width: 99%;
     margin: 5px auto 20px auto;
@@ -55,6 +86,12 @@
     color: black;
 }
 
+.form-group .optional {
+    font-weight: normal;
+    font-size: 0.9rem;
+    color: #444;
+}
+
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -74,6 +111,7 @@
     grid-column: 1 / -1;
 }
 
+/* ========= Save / Cancel row ========= */
 .form-buttons {
     display: flex;
     gap: 15px;

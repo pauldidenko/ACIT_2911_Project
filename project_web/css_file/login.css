@@ -1,3 +1,8 @@
+/*
+ * login.css — Full-screen login overlay used from index.html (staff login → session cookie).
+ * Teammates: pair with JS that POSTs JSON to /api/auth/login; styles only here.
+ */
+
 .login-overlay {
     position: fixed;
     inset: 0;

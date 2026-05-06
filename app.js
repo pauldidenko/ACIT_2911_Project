@@ -1,3 +1,15 @@
+/**
+ * app.js — Lost & Found backend (Express 5 + SQLite + sessions + multipart uploads).
+ *
+ * For teammates:
+ * - Run: `npm start` (uses PORT and paths from `.env`; defaults in code if missing).
+ * - Static files live in `project_web/`; API routes are registered BEFORE `express.static`
+ *   so `/api/...` is never confused with a filename.
+ * - Admin routes use `requireAdmin` (session must have logged in via POST `/api/auth/login`).
+ * - Items: GET/POST `/api/admin/items` is one `app.route()` so GET (list) and POST (create + optional image) stay together.
+ * - Images: uploaded to `project_web/uploads/items`, URL stored in DB as `/uploads/items/<filename>`.
+ * - `GET /add-item.html` injects `<meta name="app-api-origin">` so the add-item page always knows the real server URL.
+ */
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -8,6 +20,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import multer from "multer";
 
 // Load values from .env into process.env (PORT, DB_FILE, SESSION_SECRET, etc).
 dotenv.config();
@@ -83,6 +96,24 @@ async function initializeDatabase() {
   }
 }
 
+// `items.image_path`: rename legacy `image_path_name` if present, else add column if missing.
+async function ensureItemsImageColumn() {
+  const cols = await allAsync(`PRAGMA table_info(items)`);
+  const names = new Set(cols.map((c) => c.name));
+  if (names.has("image_path")) return;
+  if (names.has("image_path_name")) {
+    await runAsync(
+      `ALTER TABLE items RENAME COLUMN image_path_name TO image_path`,
+    );
+    return;
+  }
+  try {
+    await runAsync(`ALTER TABLE items ADD COLUMN image_path TEXT`);
+  } catch (err) {
+    if (!/duplicate column/i.test(String(err.message))) throw err;
+  }
+}
+
 // Safety check: app should not run without at least one admin account.
 async function ensureAdminExists() {
   const users = await allAsync(`SELECT id, username FROM admin_users LIMIT 1`);
@@ -101,8 +132,33 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Serve static frontend files from project_web/.
-app.use(express.static(path.join(__dirname, "project_web")));
+// Uploaded item photos: stored under project_web/uploads/items and served as /uploads/items/...
+const itemsUploadDir = path.join(__dirname, "project_web", "uploads", "items");
+if (!fs.existsSync(itemsUploadDir)) {
+  fs.mkdirSync(itemsUploadDir, { recursive: true });
+}
+
+const itemImageStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, itemsUploadDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const base = path
+      .basename(file.originalname, ext)
+      .replace(/\s+/g, "-")
+      .replace(/[^a-zA-Z0-9._-]/g, "");
+    cb(null, `${Date.now()}-${base || "image"}${ext}`);
+  },
+});
+
+const uploadItemImage = multer({
+  storage: itemImageStorage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+});
+
+// API routes are registered BEFORE express.static (same idea as template_server.js: session + routes,
+// then static). That way POST /api/... is never ambiguous, and a stray file under project_web/ cannot shadow an API path.
 
 // Default page route.
 app.get("/", (req, res) => {
@@ -114,9 +170,7 @@ app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body ?? {};
 
   if (!username || !password) {
-    return res
-      .status(400)
-      .json({ error: "Username and password are required" });
+    return res.status(400).json({ error: "Username and password are required" });
   }
 
   try {
@@ -167,8 +221,8 @@ app.get("/api/admin/health", requireAdmin, (_req, res) => {
   res.json({ ok: true, message: "Admin session active" });
 });
 
-// Main catalog API: supports filters, search, sorting, and pagination.
-app.get("/api/admin/items", requireAdmin, async (req, res) => {
+// Main catalog API: GET list + POST create on same path (single Route — fixes POST not matching when registered separately on Express 5 / router).
+async function listAdminItems(req, res) {
   // Pagination controls.
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
@@ -194,21 +248,19 @@ app.get("/api/admin/items", requireAdmin, async (req, res) => {
   const sortBy =
     allowedSortColumns[String(req.query.sortBy || "date_reported")] ||
     "date_reported";
-  const sortDir =
-    String(req.query.sortDir || "desc").toLowerCase() === "asc"
-      ? "ASC"
-      : "DESC";
-  const sortExpression =
-    sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
+  const sortDir = String(req.query.sortDir || "desc").toLowerCase() === "asc"
+    ? "ASC"
+    : "DESC";
+  const sortExpression = sortBy === "date_reported"
+    ? "datetime(date_reported)"
+    : sortBy;
 
   // Build dynamic WHERE clause only for provided filters.
   const where = [];
   const params = [];
 
   if (search) {
-    where.push(
-      "(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)",
-    );
+    where.push("(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)");
     const searchLike = `%${search}%`;
     params.push(searchLike, searchLike, searchLike);
   }
@@ -246,7 +298,7 @@ app.get("/api/admin/items", requireAdmin, async (req, res) => {
       SELECT
         id, item_name, category, campus, location_details, stored_location,
         date_reported, date_lost, date_found, date_claimed, status,
-        claimant_name, claimant_contact, notes
+        claimant_name, claimant_contact, notes, image_path
       FROM items
       ${whereClause}
       ORDER BY ${sortExpression} ${sortDir}, id ${sortDir}
@@ -268,12 +320,165 @@ app.get("/api/admin/items", requireAdmin, async (req, res) => {
     console.error("Failed to load items:", error);
     return res.status(500).json({ error: "Failed to load items" });
   }
+}
+
+// Create item (multipart: text fields + optional single image). Admin only.
+// template_server.js uses paths like /admin/... — we expose both /api/admin/items and /admin/items.
+async function handleCreateItem(req, res) {
+  const b = req.body ?? {};
+  const item_name = String(b.item_name ?? "").trim();
+  const category = String(b.category ?? "").trim();
+  const campus = String(b.campus ?? "").trim();
+  const status = String(b.status ?? "").trim();
+
+  const allowedCategories = [
+    "Electronics",
+    "Accessories",
+    "Clothing",
+    "Keys & ID",
+    "School Supplies",
+    "Bottles & containers",
+    "Sports & Fitness",
+    "Documents",
+    "Misc",
+  ];
+  const allowedCampus = ["Burnaby", "Downtown", "Aerospace"];
+  const allowedStatus = ["lost", "found", "claimed", "deleted"];
+
+  if (!item_name || !category || !campus || !status) {
+    return res.status(400).json({
+      error:
+        "Missing required fields: item_name, category, campus, and status are required.",
+    });
+  }
+  if (!allowedCategories.includes(category)) {
+    return res.status(400).json({ error: "Invalid category." });
+  }
+  if (!allowedCampus.includes(campus)) {
+    return res.status(400).json({ error: "Invalid campus." });
+  }
+  if (!allowedStatus.includes(status)) {
+    return res.status(400).json({ error: "Invalid status." });
+  }
+
+  const description = String(b.description ?? "").trim() || null;
+  const location_details = String(b.location_details ?? "").trim() || null;
+  const stored_location = String(b.stored_location ?? "").trim() || null;
+  const date_lost = String(b.date_lost ?? "").trim() || null;
+  const date_found = String(b.date_found ?? "").trim() || null;
+  const date_claimed = String(b.date_claimed ?? "").trim() || null;
+  const claimant_name = String(b.claimant_name ?? "").trim() || null;
+  const claimant_contact = String(b.claimant_contact ?? "").trim() || null;
+  const notes = String(b.notes ?? "").trim() || null;
+
+  const image_path = req.file
+    ? `/uploads/items/${req.file.filename}`
+    : null;
+
+  try {
+    const meta = await runAsync(
+      `INSERT INTO items (
+          item_name, description, category, campus,
+          location_details, stored_location,
+          date_lost, date_found, date_claimed,
+          status, claimant_name, claimant_contact, notes,
+          image_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        item_name,
+        description,
+        category,
+        campus,
+        location_details,
+        stored_location,
+        date_lost,
+        date_found,
+        date_claimed,
+        status,
+        claimant_name,
+        claimant_contact,
+        notes,
+        image_path,
+      ],
+    );
+
+    let newId = meta.lastID;
+    if (newId == null) {
+      const idRows = await allAsync(`SELECT last_insert_rowid() AS id`);
+      newId = idRows[0]?.id;
+    }
+
+    return res
+      .status(201)
+      .json({ success: true, id: newId, image_path });
+  } catch (error) {
+    console.error("Failed to create item:", error);
+    return res.status(500).json({
+      error: "Failed to create item",
+      detail: String(error?.message || error),
+    });
+  }
+}
+
+app
+  .route("/api/admin/items")
+  .get(requireAdmin, listAdminItems)
+  .post(requireAdmin, uploadItemImage.single("image"), handleCreateItem);
+
+app.post(
+  "/admin/items",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleCreateItem,
+);
+
+/** When serving add-item from Express, inject the real origin so the browser always POSTs to this server (any PORT). */
+function injectAppApiOriginMeta(html, req) {
+  const origin = `${req.protocol}://${req.get("host")}`;
+  return html.replace(
+    /<meta\s+name=["']app-api-origin["']\s+content=["'][^"']*["']\s*\/?>/i,
+    `<meta name="app-api-origin" content="${origin}">`,
+  );
+}
+
+app.get("/add-item.html", (req, res) => {
+  try {
+    const htmlPath = path.join(__dirname, "project_web", "add-item.html");
+    let html = fs.readFileSync(htmlPath, "utf8");
+    html = injectAppApiOriginMeta(html, req);
+    res.type("html").send(html);
+  } catch (error) {
+    console.error("Failed to serve add-item.html:", error);
+    res.status(500).send("Failed to load page");
+  }
 });
+
+// Multer errors → JSON (keep before static so POST failures never fall through to HTML-only stacks).
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "Image too large (max 8 MB)."
+        : err.code === "LIMIT_UNEXPECTED_FILE"
+          ? 'Only one file allowed, field name must be "image".'
+          : err.message;
+    return res.status(400).json({ error: message });
+  }
+  if (err) {
+    console.error("Unhandled error:", err);
+    return res.status(500).json({ error: "Server error", detail: err.message });
+  }
+  next();
+});
+
+// Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
+app.use(express.static(path.join(__dirname, "project_web")));
 
 // App startup sequence: initialize DB, ensure admin exists, then listen.
 async function startServer() {
   try {
     await initializeDatabase();
+    await ensureItemsImageColumn();
     await ensureAdminExists();
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);

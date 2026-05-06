@@ -1,5 +1,13 @@
-// This file is for hashing passwords.
-// node hash.js "MyStrongPassword!"
+/**
+ * hash.js — one-off CLI helper to bcrypt-hash a password.
+ *
+ * Use when adding or resetting an admin row in SQLite (`admin_users.password_hash`).
+ *
+ * Usage (from project root):
+ *   node hash.js "YourPlainPassword"
+ *
+ * Copy the printed hash into INSERT/UPDATE for `admin_users` — never commit real passwords.
+ */
 
 import bcrypt from "bcrypt";
 
