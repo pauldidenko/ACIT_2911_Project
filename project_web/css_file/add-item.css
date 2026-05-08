@@ -10,7 +10,7 @@
 
 /* ========= Success / error banner (filled by JS) ========= */
 .page-banner {
-    max-width: 99%;
+    max-width: 98%;
     margin: 8px auto;
     padding: 14px 18px;
     border-radius: 10px;
@@ -30,7 +30,7 @@
 }
 
 .lost-hero {
-    max-width: 99%;
+    max-width: 98%;
     min-height: 120px;
     margin: 5px auto;
     padding: 30px clamp(30px, 5vw, 80px);
@@ -59,7 +59,7 @@
 
 /* ========= Form card ========= */
 .add-item-section {
-    max-width: 99%;
+    max-width: 98%;
     margin: 5px auto 20px auto;
     padding: 30px clamp(20px, 5vw, 80px);
 
