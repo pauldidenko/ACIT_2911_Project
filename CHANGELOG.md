@@ -17,3 +17,5 @@
 | 2026-05-06 | Removed **Date claimed** field from add-item form (still nullable in DB / API if set elsewhere) | Paul |
 | 2026-05-06 | **`hash.js`**: CLI bcrypt helper for generating **`admin_users`** password hashes | Paul |
 | 2026-05-06 | Documentation: file-level / teammate comments added to **`app.js`**, **`add-item.*`**, **`catalog.*`**, **`login.css`**, **`account.html`**, **`lost_body.css`**, **`hash.js`** | Paul |
+| 2026-05-07| Enabled supertest testing functionality; export Integration Tests: Check server response, test content type headers, 
+| Daniel|
