@@ -2,7 +2,6 @@
 Integration Tests: 
 Routes, Middleware, and DB are working
 Test image upload functionality @ /tests/fixtures/lost.jpg
-
 */
 
 import { describe, it, before, beforeEach } from "node:test";
@@ -77,7 +76,7 @@ describe("POST /api/admin/items", () => {
 
 describe("DELETE /api/admin/items/:id", () => {
   //tests DELETE functionality, (we do not have that implemented yet)
-  it("Prevents Deletion Without Admin Credentials", async () => {
+  it("Prevents Deletion of an Item Without Admin Credentials", async () => {
     const res = await supertest(app).delete("/api/admin/items/1");
     assert.strictEqual(res.status, 401);
   });
