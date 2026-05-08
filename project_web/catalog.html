@@ -6,6 +6,38 @@
     <title>BCIT lost and found | Catalog</title>
     <link rel="stylesheet" href="./css_file/style.css">
     <link rel="stylesheet" href="./css_file/lost-list.css">
+    <style>
+        .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 400px;
+    max-width: 90%;
+}
+
+.close-btn {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+}
+    </style>
 </head>
 <body>
     <header class="navbar">
@@ -96,6 +128,13 @@
         </div>
     </section>
 
+    <div id="viewModal" class="modal hidden">
+        <div class="modal-content">
+            <span id="closeModal" class="close-btn">&times;</span>
+            <div id="modalBody">Loading...</div>
+        </div>
+    </div>
+
     <script>
         const PAGE_SIZE = 10;
         let currentPage = 1;
@@ -140,7 +179,7 @@
                     <td>${item.campus ?? "-"}</td>
                     <td><span class="status ${item.status}">${toTitleCase(item.status)}</span></td>
                     <td>
-                        <a href="#" class="action-btn view-btn">View</a>
+                        <button class="action-btn view-btn" onclick="openModal(${item.id})">View</button>
                         <a href="#" class="action-btn edit-btn">Edit</a>
                     </td>
                 </tr>
@@ -225,6 +264,55 @@
         });
 
         loadItems();
+
+        // Overlay
+        const modal = document.getElementById("viewModal");
+const modalBody = document.getElementById("modalBody");
+const closeModalBtn = document.getElementById("closeModal");
+
+// ✅ MAKE IT GLOBAL
+window.openModal = async function(id) {
+    modal.classList.remove("hidden");
+    modalBody.innerHTML = "Loading...";
+
+    try {
+        const res = await fetch(`/api/admin/items/${id}`, {
+            credentials: "include"
+        });
+
+        if (!res.ok) {
+            modalBody.innerHTML = "Failed to load item";
+            return;
+        }
+
+        const item = await res.json();
+
+        modalBody.innerHTML = `
+            <img src="${item.image_url}">
+            <h2>${item.item_name}</h2>
+            <p><strong>Category:</strong> ${item.category}</p>
+            <p><strong>Campus:</strong> ${item.campus}</p>
+            <p><strong>Status:</strong> ${item.status}</p>
+            <p><strong>Location:</strong> ${item.location_details}</p>
+            <p><strong>Date:</strong> ${new Date(item.date_reported).toLocaleDateString()}</p>
+            <p><strong>Notes:</strong> ${item.notes || "-"}</p>
+        `;
+    } catch (err) {
+        modalBody.innerHTML = "Error loading item";
+    }
+};
+
+// close button
+closeModalBtn.onclick = () => {
+    modal.classList.add("hidden");
+};
+
+// click outside
+modal.onclick = (e) => {
+    if (e.target === modal) {
+        modal.classList.add("hidden");
+    }
+};
     </script>
 </body>
 </html>

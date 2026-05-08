@@ -247,11 +247,54 @@ app.get("/api/admin/items", requireAdmin, async (req, res) => {
   }
 });
 
+// !NOTE: View item route ✅
+app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const rows = await allAsync(
+      `
+      SELECT 
+        id,
+        item_name,
+        category,
+        campus,
+        status,
+        location_details,
+        date_reported,
+        notes,
+        image_url
+      FROM items
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const item = rows[0];
+
+    // Optional: normalize image path
+    if (item.image_url) {
+      item.image_url = `/${item.image_url}`;
+    }
+
+    return res.json(item);
+
+  } catch (error) {
+    console.error("Error fetching item by id:", error);
+    return res.status(500).json({ error: "Failed to fetch item" });
+  }
+});
+
 async function startServer() {
   try {
     await initializeDatabase();
     await ensureAdminExists();
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0",  () => {
       console.log(`Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
