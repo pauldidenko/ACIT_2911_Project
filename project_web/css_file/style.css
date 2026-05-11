@@ -180,7 +180,7 @@ body {
 }
 
 /* ========= lower right button ========= */
-.i-btn {
+.circle-btn {
     position: fixed;
     right: 28px;
     bottom: 20px;
@@ -203,7 +203,7 @@ body {
     box-shadow: 3px 3px 0px #000000;
 }
 
-.i-btn:hover {
+.circle-btn:hover {
     background-color: white;
     color: black;
 }
