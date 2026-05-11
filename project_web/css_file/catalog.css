@@ -12,7 +12,7 @@
 
 /* ========= Main catalog section (white card around everything) ========= */
 .lost-catalog {
-    max-width: 99%;
+    max-width: 98%;
     margin: 5px auto 20px auto;
     padding: 30px clamp(20px, 5vw, 80px);
 
@@ -20,6 +20,7 @@
     border: 2px solid black;
     border-radius: 10px;
     box-shadow: 4px 4px 0px 0px #000000;
+    margin-top: 20px;
 }
 
 /* Title row + “+ Add Item” link */
@@ -54,6 +55,7 @@
     font-size: 1rem;
     background-color: white;
     box-shadow: 3px 3px 0px 0px #000000;
+    cursor: pointer;
 }
 
 /* Catalog action buttons — same chunky outline as filters; colour differentiates role */

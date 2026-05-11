@@ -170,7 +170,9 @@ app.post("/api/auth/login", async (req, res) => {
   const { username, password } = req.body ?? {};
 
   if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required" });
+    return res
+      .status(400)
+      .json({ error: "Username and password are required" });
   }
 
   try {
@@ -248,19 +250,21 @@ async function listAdminItems(req, res) {
   const sortBy =
     allowedSortColumns[String(req.query.sortBy || "date_reported")] ||
     "date_reported";
-  const sortDir = String(req.query.sortDir || "desc").toLowerCase() === "asc"
-    ? "ASC"
-    : "DESC";
-  const sortExpression = sortBy === "date_reported"
-    ? "datetime(date_reported)"
-    : sortBy;
+  const sortDir =
+    String(req.query.sortDir || "desc").toLowerCase() === "asc"
+      ? "ASC"
+      : "DESC";
+  const sortExpression =
+    sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
 
   // Build dynamic WHERE clause only for provided filters.
   const where = [];
   const params = [];
 
   if (search) {
-    where.push("(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)");
+    where.push(
+      "(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)",
+    );
     const searchLike = `%${search}%`;
     params.push(searchLike, searchLike, searchLike);
   }
@@ -371,9 +375,7 @@ async function handleCreateItem(req, res) {
   const claimant_contact = String(b.claimant_contact ?? "").trim() || null;
   const notes = String(b.notes ?? "").trim() || null;
 
-  const image_path = req.file
-    ? `/uploads/items/${req.file.filename}`
-    : null;
+  const image_path = req.file ? `/uploads/items/${req.file.filename}` : null;
 
   try {
     const meta = await runAsync(
@@ -408,9 +410,7 @@ async function handleCreateItem(req, res) {
       newId = idRows[0]?.id;
     }
 
-    return res
-      .status(201)
-      .json({ success: true, id: newId, image_path });
+    return res.status(201).json({ success: true, id: newId, image_path });
   } catch (error) {
     console.error("Failed to create item:", error);
     return res.status(500).json({
@@ -491,3 +491,5 @@ async function startServer() {
 
 // Entry point.
 startServer();
+
+export default app;
