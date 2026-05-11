@@ -42,51 +42,64 @@
         </nav>
     </header>
     <!-- Main Content -->
-    <div class="campus">
-        <div class="hero">
-            <h1>Welcome to BCIT Lost and Found</h1>
-        </div>
+    <div class = "hero-img">
+        <h1>Welcome to BCIT Lost and Found</h1>
     <section class="card">
         <div class="campus-item">
             <img src="picture/Burnaby_BCIT.jpg" alt="BCIT Burnaby Campus">
-            <h2>BCIT Burnaby Campus</h2>
-    
-            <div class="btn-group">
-                <button class="lost_btn">Lost</button>
-                <button class="found_btn">Found</button>
-            </div>
         </div>
     </section>
     <section class="card">
         <div class = "campus-item">    
             <img src="picture/Downtown_BCIT.jpg" alt="BCIT Downtown Campus">
-            <h2>BCIT Downtown Campus</h2>
         </div>
-   
-            <div class="btn-group">
-                <button class="lost_btn">Lost</button>
-                <button class="found_btn">Found</button>
- </div>
     </section>
     <section class="card">
         <div class = "campus-item">
             <img src="picture/Aerospace_BCIT.jpg" alt="BCIT Aerospace Campus">
-            <h2>BCIT Aerospace Campus</h2>
         </div>
-    
-            <div class="btn-group">
-                <button class="lost_btn">Lost</button>
-                <button class="found_btn">Found</button>
-            </div>
     </section>
     </div>
-    <main class="card">
+    </div>
+    <main class="card-catalog">
         <div class="container">
-            
-            <section class=""></section>
-            <section class=""></section>
-            <section class=""></section>
-            <section class=""></section>
+            <h2>Recent items:</h2>
+            <section class="lost-board">
+                <h2>Lost Items</h2>
+                <div class="lost-items-list">
+                    <table class="lost-table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Date Reported</th>
+                                <th>Campus</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogBody"></tbody>
+                    </table>
+                </div>
+            </section>
+            <section class="found-board">
+                <h2>Found Items</h2>
+                <div class="found-items-list">
+                    <table class="found-table">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Date Found</th>
+                                <th>Campus</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalogBody"></tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </main>
     <!-- Footer -->
