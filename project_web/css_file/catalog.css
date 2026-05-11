@@ -37,6 +37,7 @@
     font-size: clamp(1.4rem, 3vw, 2rem);
 }
 
+/* ========= Filter/search panel ========= */
 /* Row of search box, dropdown filters, date, sort, order, reset button */
 .catalog-controls {
     display: grid;
@@ -55,6 +56,14 @@
     position: sticky;
     top: 0;
     z-index: 50;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Makes the whole filter box feel interactive */
+.catalog-controls:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px 0px #000000;
 }
 
 /* Shared look for text search and all <select> filters */
@@ -70,12 +79,29 @@
     background-color: white;
     box-shadow: 3px 3px 0px 0px #000000;
     cursor: pointer;
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
 }
 
 /* Search input */
 .search-box {
     min-width: 0;
     cursor: text;
+}
+
+/* Input/filter hover effect */
+.search-box:hover,
+.filter-box:hover {
+    background-color: #fff9d6;
+}
+
+/* Input/filter focus effect */
+.search-box:focus,
+.filter-box:focus {
+    outline: none;
+    background-color: white;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
 }
 
 /* Catalog action buttons — same chunky outline as filters; colour differentiates role */
@@ -95,13 +121,7 @@
     text-align: center;
     white-space: nowrap;
 
-    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
-}
-
-.catalog-reset-btn:hover,
-.catalog-add-btn:hover {
-    transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0px 0px #000000;
+    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* Orange “Reset filters” */
@@ -113,6 +133,13 @@
 
 .catalog-reset-btn:hover {
     background-color: #fb923c;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.catalog-reset-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
 }
 
 /* Light green “+ Add Item” — same shape as reset, links to add-item */
@@ -124,6 +151,13 @@
 .catalog-add-btn:hover {
     background-color: #86efac;
     color: #14532d;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.catalog-add-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
 }
 
 .catalog-add-btn:focus-visible {
@@ -131,6 +165,7 @@
     outline-offset: 2px;
 }
 
+/* ========= Table wrapper ========= */
 /* Lets the table scroll sideways on small screens instead of breaking the layout */
 .table-wrapper {
     margin-top: 28px;
@@ -140,6 +175,13 @@
     border: 2px solid black;
     border-radius: 14px;
     box-shadow: 6px 6px 0px 0px #000000;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Makes the whole table feel more alive */
+.table-wrapper:hover {
+    box-shadow: 8px 8px 0px 0px #000000;
 }
 
 /* ========= Data table ========= */
@@ -166,6 +208,15 @@
     letter-spacing: 0.5px;
     font-size: 1rem;
 }
+/* Makes the whole table container slightly lift on hover */
+.table-wrapper {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.table-wrapper:hover {
+    transform: translateY(-3px);
+    box-shadow: 8px 8px 0px 0px #000000;
+}
 
 /* Rounded top corners for table header */
 .lost-table th:first-child {
@@ -174,6 +225,11 @@
 
 .lost-table th:last-child {
     border-top-right-radius: 11px;
+}
+
+/* Optional: header hover */
+.lost-table th:hover {
+    background-color: #2563eb;
 }
 
 /* Smooth effect for table rows */
@@ -204,11 +260,6 @@
     border-bottom: none;
 }
 
-/* Optional: header hover */
-.lost-table th:hover {
-    background-color: #2563eb;
-}
-
 /* ========= Status pills (lost / found / claimed / deleted) ========= */
 /* catalog.js adds class="status <status>" on a <span>; color comes from .status.<value> below */
 .status {
@@ -221,6 +272,7 @@
     font-weight: bold;
     font-size: 0.9rem;
     box-shadow: 2px 2px 0px 0px #000000;
+
     transition: transform 0.2s ease;
 }
 
@@ -255,9 +307,8 @@
     color: black;
 }
 
-/* ========= Row action links (View / Edit / Delete) — reuse .action-btn from below ========= */
-
-/* ========= Buttons / links styled like chunky buttons (table actions + pagination) ========= */
+/* ========= Row action links (View / Edit / Delete) ========= */
+/* Buttons / links styled like chunky buttons */
 .action-btn {
     display: inline-block;
     margin: 3px;
@@ -289,7 +340,7 @@
     background-color: black;
     color: white;
     transform: translateY(-2px);
-    box-shadow: 4px 4px 0px 0px #000000;
+    box-shadow: 5px 5px 0px 0px #000000;
 }
 
 .action-btn:active {
@@ -297,6 +348,7 @@
     box-shadow: 2px 2px 0px 0px #000000;
 }
 
+/* ========= Pagination ========= */
 /* Previous / Next under the table */
 .catalog-pagination {
     margin-top: 22px;
