@@ -1,5 +1,7 @@
+/* ========= Account hero section ========= */
+/* White banner at the top of the Account page */
 .account-hero {
-    max-width: 99%;
+    max-width: 98%;
     min-height: 120px;
     margin: 5px auto;
     padding: 30px clamp(30px, 5vw, 80px);
@@ -13,6 +15,7 @@
     align-items: center;
 }
 
+/* Main Account page title */
 .account-hero-content h1 {
     margin: 0 0 10px 0;
     font-size: clamp(1.8rem, 4vw, 2.5rem);
@@ -20,14 +23,17 @@
     color: black;
 }
 
+/* Short description under the title */
 .account-hero-content p {
     margin: 0;
     font-size: clamp(0.95rem, 2vw, 1.1rem);
     color: black;
 }
 
+/* ========= Main account content section ========= */
+/* White card around all account information */
 .account-section {
-    max-width: 99%;
+    max-width: 98%;
     margin: 5px auto 20px auto;
     padding: 30px clamp(20px, 5vw, 80px);
 
@@ -37,6 +43,7 @@
     box-shadow: 4px 4px 0px 0px #000000;
 }
 
+/* Two-column layout for account info and quick actions */
 .account-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -44,6 +51,7 @@
     margin-bottom: 30px;
 }
 
+/* Account cards and statistic cards */
 .account-card,
 .stat-card {
     background-color: #fefce8;
@@ -51,13 +59,24 @@
     border-radius: 12px;
     box-shadow: 4px 4px 0px 0px #000000;
     padding: 25px;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Interactive hover effect for cards */
+.account-card:hover,
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 6px 6px 0px 0px #000000;
+}
+
+/* Card headings */
 .account-card h2 {
     margin-top: 0;
     margin-bottom: 20px;
 }
 
+/* Each row inside Account Information card */
 .account-info-row {
     display: flex;
     justify-content: space-between;
@@ -66,20 +85,31 @@
     border-bottom: 1.5px solid black;
 }
 
+/* Removes border from last account info row */
 .account-info-row:last-child {
     border-bottom: none;
 }
 
+/* Active account status badge */
 .active-status {
-    color: green;
+    background-color: #86efac;
+    color: black;
+    padding: 5px 10px;
+    border: 2px solid black;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
 }
 
+/* ========= Quick action buttons ========= */
+/* Vertical button layout */
 .quick-actions {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
+/* Main account buttons */
 .account-btn {
     display: inline-block;
     text-align: center;
@@ -91,42 +121,82 @@
     font-weight: bold;
     border: 2px solid black;
     box-shadow: 4px 4px 0px 0px #000000;
+
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.15s ease;
 }
 
+/* Secondary button, for example Back to Home */
 .secondary-btn {
     background-color: white;
 }
 
+/* Button hover effect */
 .account-btn:hover {
     background-color: black;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
 }
 
+/* Button click effect */
+.account-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* ========= Statistics section ========= */
+/* Four-column layout for item counts */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 15px;
 }
 
+/* Statistic cards */
 .stat-card {
     text-align: center;
 }
 
+/* Statistic title */
 .stat-card h3 {
     margin: 0 0 10px 0;
     font-size: 1.1rem;
 }
 
+/* Statistic number */
 .stat-card p {
     margin: 0;
     font-size: 2rem;
     font-weight: bold;
+}
+
+/* Different colors for each stat number */
+.stat-card:nth-child(1) p {
     color: #3b82f6;
 }
 
+.stat-card:nth-child(2) p {
+    color: #f472b6;
+}
+
+.stat-card:nth-child(3) p {
+    color: #22c55e;
+}
+
+.stat-card:nth-child(4) p {
+    color: #8b5cf6;
+}
+
+/* ========= Responsive design ========= */
+/* On smaller screens, cards stack vertically */
 @media screen and (max-width: 842px) {
     .account-grid,
     .stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .account-info-row {
+        flex-direction: column;
+        gap: 5px;
     }
 }
