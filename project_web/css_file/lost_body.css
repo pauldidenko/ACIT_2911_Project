@@ -1,3 +1,8 @@
+/*
+ * lost_body.css — Layout for lost-cards.html (and similar catalog-style sections).
+ * `.catalog-add-btn` matches catalog.css green “Add Item” styling when both pages use that class.
+ */
+
 /* Lost Items Catalog */
 
 .lost-catalog {
@@ -25,21 +30,33 @@
     font-size: clamp(1.4rem, 3vw, 2rem);
 }
 
+/* Match catalog.css “Add Item” — same as reset-filters shape, light green */
 .catalog-add-btn {
     display: inline-block;
-    background-color: #f472b6;
-    color: black;
-    padding: 10px 18px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: bold;
+    padding: 12px 18px;
     border: 2px solid black;
-    box-shadow: 4px 4px 0px 0px #000000;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px 0px #000000;
+    text-decoration: none;
+    text-align: center;
+    background-color: #bbf7d0;
+    color: #14532d;
+    transition: background-color 0.15s ease, transform 0.1s ease;
 }
 
 .catalog-add-btn:hover {
-    background-color: black;
-    color: white;
+    background-color: #86efac;
+    color: #14532d;
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.catalog-add-btn:focus-visible {
+    outline: 3px solid #166534;
+    outline-offset: 2px;
 }
 
 .catalog-controls {

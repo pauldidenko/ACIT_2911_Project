@@ -1,0 +1,238 @@
+/*
+ * catalog.css — Styles used only by catalog.html (items table, filters, pagination).
+ *
+ * Linked from catalog.html as: <link rel="stylesheet" href="./css_file/catalog.css">
+ *
+ * Note: Some class names still say "lost-" (e.g. .lost-catalog, .lost-table) from older naming;
+ *       they are just CSS identifiers — changing them would require updating catalog.html too.
+ *
+ * Buttons: `.catalog-reset-btn` (orange) and `.catalog-add-btn` (light green link-button) share the same
+ *           outline/shadow; colours distinguish reset vs navigate to add-item.html.
+ */
+
+/* ========= Main catalog section (white card around everything) ========= */
+.lost-catalog {
+    max-width: 99%;
+    margin: 5px auto 20px auto;
+    padding: 30px clamp(20px, 5vw, 80px);
+
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+/* Title row + “+ Add Item” link */
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.catalog-header h2 {
+    margin: 0;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+/* Row of search box, dropdown filters, date, sort, reset button */
+.catalog-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+/* Shared look for text search and all <select> filters */
+.search-box,
+.filter-box {
+    padding: 12px 15px;
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 1rem;
+    background-color: white;
+    box-shadow: 3px 3px 0px 0px #000000;
+}
+
+/* Catalog action buttons — same chunky outline as filters; colour differentiates role */
+.catalog-reset-btn,
+.catalog-add-btn {
+    padding: 12px 18px;
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px 0px #000000;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.catalog-reset-btn:hover,
+.catalog-add-btn:hover {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* Orange “Reset filters” */
+.catalog-reset-btn {
+    background-color: #fdba74;
+    color: #1c1917;
+}
+
+.catalog-reset-btn:hover {
+    background-color: #fb923c;
+}
+
+/* Light green “+ Add Item” — same shape as reset, links to add-item */
+.catalog-add-btn {
+    background-color: #bbf7d0;
+    color: #14532d;
+}
+
+.catalog-add-btn:hover {
+    background-color: #86efac;
+    color: #14532d;
+}
+
+.catalog-add-btn:focus-visible {
+    outline: 3px solid #166534;
+    outline-offset: 2px;
+}
+
+/* Search input grows to fill space on wide screens */
+.search-box {
+    flex: 1;
+    min-width: 230px;
+}
+
+/* Lets the table scroll sideways on small screens instead of breaking the layout */
+.table-wrapper {
+    overflow-x: auto;
+}
+
+/* ========= Data table ========= */
+.lost-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fefce8;
+    border: 2px solid black;
+}
+
+.lost-table th,
+.lost-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 2px solid black;
+}
+
+.lost-table th {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+}
+
+/* No double border under the last row */
+.lost-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* ========= Status pills (lost / found / claimed / deleted) ========= */
+/* catalog.js adds class="status <status>" on a <span>; color comes from .status.<value> below */
+.status {
+    display: inline-block;
+    padding: 6px 12px;
+    border: 2px solid black;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 0.85rem;
+}
+
+.status.lost {
+    background-color: #f472b6;
+    color: black;
+}
+
+/* Legacy name — kept in case old markup still uses “returned” */
+.status.returned {
+    background-color: #86efac;
+    color: black;
+}
+
+.status.found {
+    background-color: #86efac;
+    color: black;
+}
+
+.status.claimed {
+    background-color: #bfdbfe;
+    color: black;
+}
+
+.status.deleted {
+    background-color: #d1d5db;
+    color: black;
+}
+
+/* ========= Row action links (View / Edit) — reuse .action-btn from below ========= */
+
+/* ========= Buttons / links styled like chunky buttons (table actions + pagination) ========= */
+.action-btn {
+    display: inline-block;
+    margin: 3px;
+    padding: 7px 10px;
+    border: 2px solid black;
+    border-radius: 8px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    box-shadow: 3px 3px 0px 0px #000000;
+}
+
+.view-btn {
+    background-color: #bfdbfe;
+}
+
+.edit-btn {
+    background-color: #fef08a;
+}
+
+.delete-btn {
+    background-color: #fca5a5;
+}
+
+.action-btn:hover {
+    background-color: black;
+    color: white;
+}
+
+/* Previous / Next under the table */
+.catalog-pagination {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Dim Prev/Next when JS sets disabled on the button */
+.catalog-pagination .action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ========= Narrow screens: stack filters vertically, full-width inputs ========= */
+@media screen and (max-width: 842px) {
+    .catalog-controls {
+        flex-direction: column;
+    }
+
+    .search-box,
+    .filter-box {
+        width: 100%;
+    }
+}
