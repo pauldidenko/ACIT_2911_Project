@@ -5,4 +5,4 @@ serv.out
 serv.err
 
 # DB backups from one-off tools
-*.bak
+*.bak*:Zone.Identifier

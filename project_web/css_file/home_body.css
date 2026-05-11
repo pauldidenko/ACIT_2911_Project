@@ -18,7 +18,7 @@
 
 .hero-img h1 {
     position: absolute;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 90%;
@@ -93,9 +93,7 @@
 }
 
 .lost-table th,
-.found-table th,
-.found-table td,
-.lost-table td {
+.found-table th{
     background-color: #3b82f6;
     color: white;
     font-weight: bold;
