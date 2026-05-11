@@ -13,14 +13,13 @@
 /* ========= Main catalog section (white card around everything) ========= */
 .lost-catalog {
     max-width: 98%;
-    margin: 5px auto 20px auto;
+    margin: 20px auto 20px auto;
     padding: 30px clamp(20px, 5vw, 80px);
 
     background-color: white;
     border: 2px solid black;
-    border-radius: 10px;
-    box-shadow: 4px 4px 0px 0px #000000;
-    margin-top: 20px;
+    border-radius: 12px;
+    box-shadow: 5px 5px 0px 0px #000000;
 }
 
 /* Title row + “+ Add Item” link */
@@ -42,7 +41,7 @@
 .catalog-controls {
     display: flex;
     gap: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     flex-wrap: wrap;
 }
 
@@ -58,6 +57,13 @@
     cursor: pointer;
 }
 
+/* Search input grows to fill space on wide screens */
+.search-box {
+    flex: 1;
+    min-width: 230px;
+    cursor: text;
+}
+
 /* Catalog action buttons — same chunky outline as filters; colour differentiates role */
 .catalog-reset-btn,
 .catalog-add-btn {
@@ -71,7 +77,7 @@
     text-decoration: none;
     display: inline-block;
     text-align: center;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .catalog-reset-btn:hover,
@@ -106,36 +112,60 @@
     outline-offset: 2px;
 }
 
-/* Search input grows to fill space on wide screens */
-.search-box {
-    flex: 1;
-    min-width: 230px;
-}
-
 /* Lets the table scroll sideways on small screens instead of breaking the layout */
 .table-wrapper {
+    margin-top: 28px;
     overflow-x: auto;
+
+    background-color: #fefce8;
+    border: 2px solid black;
+    border-radius: 14px;
+    box-shadow: 6px 6px 0px 0px #000000;
 }
 
 /* ========= Data table ========= */
 .lost-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background-color: #fefce8;
-    border: 2px solid black;
 }
 
+/* Table cells */
 .lost-table th,
 .lost-table td {
-    padding: 14px 16px;
+    padding: 18px 22px;
     text-align: left;
-    border-bottom: 2px solid black;
+    border-bottom: 1.5px solid black;
 }
 
+/* Table heading */
 .lost-table th {
     background-color: #3b82f6;
     color: white;
     font-weight: bold;
+    letter-spacing: 0.5px;
+    font-size: 1rem;
+}
+
+/* Rounded top corners for table header */
+.lost-table th:first-child {
+    border-top-left-radius: 11px;
+}
+
+.lost-table th:last-child {
+    border-top-right-radius: 11px;
+}
+
+/* Alternating row color to make the table easier to read */
+.lost-table tbody tr:nth-child(even) {
+    background-color: #fff9d6;
+}
+
+/* Row hover effect to make the table feel more interactive */
+.lost-table tbody tr:hover {
+    background-color: #eaf3ff;
+    transition: background-color 0.2s ease;
 }
 
 /* No double border under the last row */
@@ -147,11 +177,14 @@
 /* catalog.js adds class="status <status>" on a <span>; color comes from .status.<value> below */
 .status {
     display: inline-block;
-    padding: 6px 12px;
+    min-width: 75px;
+    text-align: center;
+    padding: 7px 12px;
     border: 2px solid black;
-    border-radius: 20px;
+    border-radius: 999px;
     font-weight: bold;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    box-shadow: 2px 2px 0px 0px #000000;
 }
 
 .status.lost {
@@ -161,7 +194,7 @@
 
 /* Legacy name — kept in case old markup still uses “returned” */
 .status.returned {
-    background-color: #86efac;
+    background-color: #c4b5fd;
     color: black;
 }
 
@@ -180,19 +213,22 @@
     color: black;
 }
 
-/* ========= Row action links (View / Edit) — reuse .action-btn from below ========= */
+/* ========= Row action links (View / Edit / Delete) — reuse .action-btn from below ========= */
 
 /* ========= Buttons / links styled like chunky buttons (table actions + pagination) ========= */
 .action-btn {
     display: inline-block;
     margin: 3px;
-    padding: 7px 10px;
+    padding: 8px 13px;
+
     border: 2px solid black;
-    border-radius: 8px;
+    border-radius: 9px;
     text-decoration: none;
     color: black;
     font-weight: bold;
     box-shadow: 3px 3px 0px 0px #000000;
+
+    transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.1s ease;
 }
 
 .view-btn {
@@ -210,11 +246,17 @@
 .action-btn:hover {
     background-color: black;
     color: white;
+    transform: translateY(-2px);
+}
+
+.action-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
 }
 
 /* Previous / Next under the table */
 .catalog-pagination {
-    margin-top: 20px;
+    margin-top: 22px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -225,6 +267,7 @@
 .catalog-pagination .action-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* ========= Narrow screens: stack filters vertically, full-width inputs ========= */
@@ -234,7 +277,92 @@
     }
 
     .search-box,
-    .filter-box {
+    .filter-box,
+    .catalog-reset-btn,
+    .catalog-add-btn {
         width: 100%;
+    }
+
+    .lost-table th,
+    .lost-table td {
+        padding: 14px 16px;
+    }
+}
+/* ========= Table hover effects ========= */
+
+/* Smooth effect for table rows */
+.lost-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+/* Highlight row when user hovers */
+.lost-table tbody tr:hover {
+    background-color: #eaf3ff;
+    cursor: pointer;
+}
+
+/* Add pink accent line on the left when hovering */
+.lost-table tbody tr:hover td:first-child {
+    box-shadow: inset 6px 0 0 #f472b6;
+    padding-left: 24px;
+    transition: box-shadow 0.2s ease, padding-left 0.2s ease;
+}
+
+/* Make status badge slightly pop on row hover */
+.lost-table tbody tr:hover .status {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* Make buttons feel clickable */
+.action-btn {
+    transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.15s ease;
+}
+
+.action-btn:hover {
+    background-color: black;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 4px 4px 0px 0px #000000;
+}
+
+/* Optional: header hover */
+.lost-table th:hover {
+    background-color: #2563eb;
+}
+/* Make filters fit on one line */
+.catalog-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Smaller search bar */
+.search-box {
+    flex: 0 1 280px;
+    min-width: 240px;
+    max-width: 280px;
+}
+/* Make dropdowns more compact */
+.filter-box {
+    flex: 0 0 auto;
+    min-width: 160px;
+    max-width: 190px;
+}
+
+/* Make reset button fit better too */
+.catalog-reset-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+/* Mobile stays stacked */
+@media screen and (max-width: 842px) {
+    .search-box,
+    .filter-box,
+    .catalog-reset-btn {
+        width: 100%;
+        max-width: 100%;
     }
 }
