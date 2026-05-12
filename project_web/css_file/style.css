@@ -93,21 +93,25 @@ body {
     display: block;
     text-decoration: none;
     color: white;
-    padding: 10px 11px;
+    padding: 8px 10px;
     font-size: clamp(0.8rem, 2vw, 1.3rem);
     font-weight: bold;
 }
 
 .nav-list .login {
+    display: inline-block;
     background-color: white;
     color: rgb(45, 143, 255);
     padding: 8px 10px;
     border-radius: 10px;
-    text-decoration: none;
-    font-weight: bold;
     border: 2px solid black;
     box-shadow: 4px 4px 0px 0px #000000;
-    max-width: 98%;
+}
+
+.nav-list .login a {
+    display: block;
+    padding: 8px 10px;
+    color: rgb(45, 143, 255);
 }
 
 .nav-list .login:hover {
@@ -179,18 +183,32 @@ body {
     margin-top: 20px;
 }
 
-/* ========= lower right button ========= */
-.circle-btn {
+/* ===== lower right button ===== */
+
+.i-btn {
     position: fixed;
     right: 28px;
     bottom: 20px;
 
     width: 50px;
+    height: 230px;
+
+    z-index: 9999;
+}
+
+/* all buttons */
+.circle-btn,
+.home-btn,
+.catalog-btn,
+.account1-btn {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+
+    width: 50px;
     height: 50px;
     border-radius: 50%;
 
-    background-color: #3b82f6;
-    color: white;
     border: 2px solid black;
 
     display: flex;
@@ -198,12 +216,71 @@ body {
     justify-content: center;
 
     text-decoration: none;
-    font-size: 24px;
     cursor: pointer;
+
     box-shadow: 3px 3px 0px #000000;
+
+    transition: all 0.3s ease;
 }
 
+/* main button */
+.circle-btn {
+    background-color: #f472b6;
+    color: white;
+    font-size: 24px;
+    z-index: 10;
+}
+
+/* hidden buttons */
+.home-btn,
+.catalog-btn,
+.account1-btn {
+    background-color: #f472b6;
+    color: white;
+    font-size: 12px;
+
+    opacity: 0;
+    transform: scale(0.5);
+
+    pointer-events: none;
+}
+
+/* show buttons */
+.i-btn:hover .home-btn {
+    opacity: 1;
+    transform: translateY(-60px) scale(1);
+    pointer-events: auto;
+}
+
+.i-btn:hover .catalog-btn {
+    opacity: 1;
+    transform: translateY(-120px) scale(1);
+    pointer-events: auto;
+}
+
+.i-btn:hover .account1-btn {
+    opacity: 1;
+    transform: translateY(-180px) scale(1);
+    pointer-events: auto;
+}
+
+/* hover effects */
 .circle-btn:hover {
     background-color: white;
     color: black;
+}
+
+.home-btn:hover,
+.catalog-btn:hover,
+.account1-btn:hover {
+    background-color: white;
+    color: black;
+    transform: scale(1.08);
+}
+
+.circle-btn i,
+.home-btn i,
+.catalog-btn i,
+.account1-btn i {
+    font-size: 28px;
 }
