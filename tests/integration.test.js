@@ -2,6 +2,11 @@
 Integration Tests: 
 Routes, Middleware, and DB are working
 Test image upload functionality @ /tests/fixtures/lost.jpg
+
+--- Public home API tests (added with index.html dynamic tables) ---
+These hit GET /api/public/items/recent/lost|found with **no** login cookie. They document the
+contract for the browser: 200 JSON, `items` is an array with at most 3 rows, and responses must
+not leak private fields like `description` (only the whitelisted columns from app.js).
 */
 
 import { describe, it, before, beforeEach } from "node:test";
@@ -79,5 +84,39 @@ describe("DELETE /api/admin/items/:id", () => {
   it("Prevents Deletion of an Item Without Admin Credentials", async () => {
     const res = await supertest(app).delete("/api/admin/items/1");
     assert.strictEqual(res.status, 401);
+  });
+});
+
+describe("GET /api/public/items/recent (home preview)", () => {
+  /*
+   * Public routes used by project_web/js/index.js on the home page.
+   * Anyone can call them — assertions make sure we never accidentally expose admin-only fields
+   * and that pagination-by-limit stays capped at 3 for both lost and found previews.
+   */
+  it("returns recent lost items without auth (200, items array, max 3)", async () => {
+    const res = await supertest(app).get("/api/public/items/recent/lost");
+    assert.equal(res.status, 200);
+    assert.ok(Array.isArray(res.body.items));
+    assert.ok(res.body.items.length <= 3);
+    if (res.body.items.length > 0) {
+      const row = res.body.items[0];
+      assert.ok("item_name" in row);
+      assert.ok("campus" in row);
+      assert.ok("date_reported" in row);
+      assert.ok(!("description" in row));
+    }
+  });
+
+  it("returns recent found items without auth (200, items array, max 3)", async () => {
+    const res = await supertest(app).get("/api/public/items/recent/found");
+    assert.equal(res.status, 200);
+    assert.ok(Array.isArray(res.body.items));
+    assert.ok(res.body.items.length <= 3);
+    if (res.body.items.length > 0) {
+      const row = res.body.items[0];
+      assert.ok("item_name" in row);
+      assert.ok("campus" in row);
+      assert.ok(!("description" in row));
+    }
   });
 });

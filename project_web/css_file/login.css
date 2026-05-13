@@ -1,18 +1,25 @@
 /*
  * login.css — Full-screen login overlay used from index.html (staff login → session cookie).
- * Teammates: pair with JS that POSTs JSON to /api/auth/login; styles only here.
+ *
+ * Teammates:
+ * - Behaviour is driven by project_web/js/index.js (add/remove class `is-open` on #loginOverlay).
+ * - The overlay is hidden by default (display: none) so the home page stays public until “Login”.
+ * - Background is solid white (#ffffff) so nothing from the page shows through behind the modal
+ *   (we used to use a translucent white; product decision was a cleaner full-screen white sheet).
  */
 
 .login-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(255, 255, 255, 0.92);
+    /* Solid white backdrop when the login sheet is open (covers the entire viewport). */
+    background: #ffffff;
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 2000;
 }
 
+/* JS toggles this class when the user opens/closes the login dialog. */
 .login-overlay.is-open {
     display: flex;
 }
@@ -57,6 +64,7 @@
     cursor: pointer;
 }
 
+/* Secondary action to dismiss the modal without submitting (wired in index.js). */
 .login-card button.login-cancel {
     background: #e5e7eb;
     color: #111827;

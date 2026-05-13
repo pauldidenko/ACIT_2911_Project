@@ -38,15 +38,26 @@
 }
 
 /* ========= Filter/search panel ========= */
-/* Row of search box, dropdown filters, date, sort, order, reset button */
+/*
+ * Layout note (why this changed):
+ * We originally used a fixed 6-column grid for `.catalog-controls`, but catalog.html actually
+ * places **eight** controls in this row (search + 5 filters + 2 sort dropdowns + reset). That meant
+ * the last two controls sat on a second row with “empty” grid tracks beside them — looked offset.
+ *
+ * Fix: `repeat(auto-fit, minmax(170px, 1fr))` lets the browser reflow as many equal-width columns
+ * as fit inside the light-blue outer box, so every control stays aligned and padded inside the card
+ * at different window widths. `min-width: 0` on direct children avoids flex/grid blow-out from
+ * long <select> labels overflowing the panel.
+ */
 .catalog-controls {
     display: grid;
-    grid-template-columns: 280px 180px 160px 180px 170px 230px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 14px;
-    align-items: center;
+    align-items: stretch;
 
     margin-bottom: 30px;
     padding: 18px;
+    box-sizing: border-box;
 
     background-color: #eff6ff;
     border: 2px solid black;
@@ -58,6 +69,11 @@
     z-index: 50;
 
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Each filter/search child is a grid item; this prevents long option text from breaking the layout. */
+.catalog-controls > * {
+    min-width: 0;
 }
 
 /* Makes the whole filter box feel interactive */
@@ -366,9 +382,12 @@
 }
 
 /* ========= Narrow screens: stack filters vertically, full-width inputs ========= */
+/*
+ * On phones / narrow tablets we override the auto-fit grid above and force one column so every
+ * control spans the full width of the blue filter card (easier to tap, no horizontal scroll).
+ */
 @media screen and (max-width: 842px) {
     .catalog-controls {
-        display: grid;
         grid-template-columns: 1fr;
         position: static;
         overflow-x: visible;

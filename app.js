@@ -6,6 +6,15 @@
  * - Static files live in `project_web/`; API routes are registered BEFORE `express.static`
  *   so `/api/...` is never confused with a filename.
  * - Admin routes use `requireAdmin` (session must have logged in via POST `/api/auth/login`).
+ *
+ * --- Public “home preview” API (added for index.html) ---
+ * These routes are intentionally open (no login cookie required). They only return a tiny
+ * slice of the database so visitors can see recent activity without exposing admin data:
+ *   GET /api/public/items/recent/lost   — status=lost, LIMIT 3, newest by date_reported
+ *   GET /api/public/items/recent/found — status=found, LIMIT 3, newest by date_found (fallback date_reported)
+ * Optional query: ?search=… — same text search idea as the admin list (name / description / location), still capped at 3 rows.
+ * The full catalog stays on GET /api/admin/items (requires admin session).
+ *
  * - Items: GET/POST `/api/admin/items` is one `app.route()` so GET (list) and POST (create + optional image) stay together.
  * - Images: uploaded to `project_web/uploads/items`, URL stored in DB as `/uploads/items/<filename>`.
  * - `GET /add-item.html` injects `<meta name="app-api-origin">` so the add-item page always knows the real server URL.
@@ -217,6 +226,83 @@ app.get("/api/auth/session", (req, res) => {
     username: req.session.username,
   });
 });
+
+// ---------------------------------------------------------------------------
+// Public recent-items endpoints (home page — project_web/js/index.js)
+// ---------------------------------------------------------------------------
+// Why this exists: index.html is public. We must NOT use /api/admin/items there
+// (that would 401 without a cookie). Instead these handlers return only safe columns
+// and never more than PUBLIC_RECENT_LIMIT rows, so strangers never scrape the full DB.
+const PUBLIC_RECENT_LIMIT = 3;
+
+/**
+ * If `search` is non-empty, narrows the query with the same LIKE pattern we use on the
+ * admin catalog (item name, description, or location text). Still combined with LIMIT 3
+ * in the route handlers — this is for optional filtering only, not bulk export.
+ */
+function appendPublicSearchFilters(search, whereParts, params) {
+  const term = String(search || "").trim();
+  if (!term) return;
+  whereParts.push(
+    "(item_name LIKE ? OR description LIKE ? OR location_details LIKE ?)",
+  );
+  const like = `%${term}%`;
+  params.push(like, like, like);
+}
+
+/** Latest lost rows for the public “Lost Items” table on the home page. */
+async function listPublicRecentLost(req, res) {
+  const search = String(req.query.search || "").trim();
+  const whereParts = [`status = 'lost'`];
+  const params = [];
+  appendPublicSearchFilters(search, whereParts, params);
+  const whereClause = whereParts.join(" AND ");
+  try {
+    const rows = await allAsync(
+      `
+      SELECT item_name, campus, date_reported
+      FROM items
+      WHERE ${whereClause}
+      ORDER BY datetime(date_reported) DESC, id DESC
+      LIMIT ?
+      `,
+      [...params, PUBLIC_RECENT_LIMIT],
+    );
+    return res.json({ items: rows });
+  } catch (error) {
+    console.error("Failed to load public lost items:", error);
+    return res.status(500).json({ error: "Failed to load items" });
+  }
+}
+
+/** Latest found rows for the public “Found Items” table (sort prefers date_found when set). */
+async function listPublicRecentFound(req, res) {
+  const search = String(req.query.search || "").trim();
+  const whereParts = [`status = 'found'`];
+  const params = [];
+  appendPublicSearchFilters(search, whereParts, params);
+  const whereClause = whereParts.join(" AND ");
+  try {
+    const rows = await allAsync(
+      `
+      SELECT item_name, campus, date_found, date_reported
+      FROM items
+      WHERE ${whereClause}
+      ORDER BY datetime(COALESCE(date_found, date_reported)) DESC, id DESC
+      LIMIT ?
+      `,
+      [...params, PUBLIC_RECENT_LIMIT],
+    );
+    return res.json({ items: rows });
+  } catch (error) {
+    console.error("Failed to load public found items:", error);
+    return res.status(500).json({ error: "Failed to load items" });
+  }
+}
+
+// Wire paths before static files (same rule as other /api routes).
+app.get("/api/public/items/recent/lost", listPublicRecentLost);
+app.get("/api/public/items/recent/found", listPublicRecentFound);
 
 // Simple protected test route (useful for debugging auth quickly).
 app.get("/api/admin/health", requireAdmin, (_req, res) => {

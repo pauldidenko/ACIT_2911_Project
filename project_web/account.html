@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<!-- account.html — placeholder account area (logout hits POST /api/auth/logout). Extend as needed. -->
+<!--
+  account.html — Admin-facing account summary (quick links, placeholder stats).
+  Security: guests are redirected to index.html by ./js/account.js (session check on load).
+  The visible username in the card is filled from GET /api/auth/session when logged in (#accountUsername).
+-->
 <html lang="en">
 
 <head>
@@ -40,7 +44,8 @@
 
                 <div class="account-info-row">
                     <span>Username:</span>
-                    <strong>admin</strong>
+                    <!-- Default text replaced by account.js from /api/auth/session when the user is logged in. -->
+                    <strong id="accountUsername">admin</strong>
                 </div>
 
                 <div class="account-info-row">
@@ -98,17 +103,8 @@
         <div class="container"></div>
     </main>
 
-    <script>
-        document.getElementById("logoutBtn").addEventListener("click", async (event) => {
-            event.preventDefault();
-            try {
-                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-            } catch (_error) {
-                // ignore
-            }
-            window.location.href = "/index.html";
-        });
-    </script>
+    <!-- Session guard + logout wiring: see ./js/account.js (runs on defer after DOM is parsed). -->
+    <script src="./js/account.js" defer></script>
 </body>
 <!-- Footer -->
 <div class="i-btn">

@@ -13,6 +13,7 @@
 </head>
 
 <body>
+    <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see index.js + login.css). -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true" aria-modal="true" role="dialog">
         <div class="login-card" id="loginCard">
             <h2>Login</h2>
@@ -31,7 +32,8 @@
             </form>
         </div>
     </div>
-    <!-- Navigation -->
+    <!-- Navigation: Catalog + Account start with the HTML `hidden` attribute so guests only see Home + Login;
+         index.js removes `hidden` after a successful /api/auth/session when someone is logged in. -->
     <header class="navbar">
         <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
         <nav class="nav-links">
@@ -66,6 +68,7 @@
     <main class="card-catalog">
         <div class="container">
             <h2>Recent items:</h2>
+            <!-- Lost / Found tables: tbody is empty in HTML; project_web/js/index.js fills rows from /api/public/items/recent/... -->
             <section class="lost-board">
                 <h2>Lost Items</h2>
                 <div class="lost-items-list">
@@ -77,25 +80,7 @@
                                 <th>Campus</th>
                             </tr>
                         </thead>
-                        <tbody id="catalogBody">
-                            <tr>
-                                <td>iPhone 15</td>
-                                <td>2026-05-11</td>
-                                <td>Downtown</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>Backpack</td>
-                                <td>2026-05-10</td>
-                                <td>Burnaby</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>Student Card</td>
-                                <td>2026-05-09</td>
-                                <td>Downtown</td>
-                            </tr>
-                        </tbody>
+                        <tbody id="lostItemsBody"></tbody>
                     </table>
                 </div>
             </section>
@@ -110,25 +95,7 @@
                                 <th>Campus</th>
                             </tr>
                         </thead>
-                        <tbody id="catalogBody">
-                            <tr>
-                                <td>iPhone 15</td>
-                                <td>2026-05-11</td>
-                                <td>Downtown</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>Backpack</td>
-                                <td>2026-05-10</td>
-                                <td>Burnaby</td>
-                            </tr>
-                            
-                            <tr>
-                                <td>Student Card</td>
-                                <td>2026-05-09</td>
-                                <td>Downtown</td>
-                            </tr>
-                        </tbody>
+                        <tbody id="foundItemsBody"></tbody>
                     </table>
                 </div>
             </section>
@@ -139,6 +106,7 @@
         <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
         <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
         <a href="catalog.html" class="catalog-btn" id="navQuickCatalog" hidden><i class="bi bi-box-seam-fill"></i></a>
+        <!-- Same visibility rules as header: hidden until logged in (see index.js setAuthenticated). -->
         <a href="account.html" class="account1-btn" id="navQuickAccount" hidden><i class="bi bi-person-fill"></i></a>
     </div>
     
@@ -163,6 +131,7 @@
             <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
     </footer>
 
+    <!-- Home page logic: login modal, nav visibility, and public table fetch — all in ./js/index.js -->
     <script src="./js/index.js" defer></script>
 </body>
 
