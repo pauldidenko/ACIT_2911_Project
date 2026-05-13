@@ -12,6 +12,12 @@
  * API: GET `/api/admin/items` with query params (see app.js `listAdminItems`). Same origin as catalog page when using `npm start`.
  */
 
+// ! =========== NEW by Gai Deng ===================== 
+const modal = document.getElementById("viewModal");
+const modalBody = document.getElementById("modalBody");
+const closeModalBtn = document.getElementById("closeModal");
+
+// ! =================== END  ========================
 // How many rows per page (must match what you expect in the UI).
 const PAGE_SIZE = 10;
 
@@ -68,7 +74,7 @@ function renderRows(items) {
                     <td>${item.campus ?? "-"}</td>
                     <td><span class="status ${item.status}">${toTitleCase(item.status)}</span></td>
                     <td>
-                        <a href="#" class="action-btn view-btn">View</a>
+                    <a href="#" class="action-btn view-btn" data-id="${item.id}">View</a>
                         <a href="#" class="action-btn edit-btn">Edit</a>
                     </td>
                 </tr>
@@ -175,5 +181,72 @@ logoutBtn.addEventListener("click", async (event) => {
     window.location.href = "/index.html";
 });
 
+// ! =========== NEW by Gai Deng ===================== 
+// modules
+// close button
+closeModalBtn.onclick = () => {
+    modal.classList.add("hidden");
+};
+
+// click outside
+modal.onclick = (e) => {
+    if (e.target === modal) {
+        modal.classList.add("hidden");
+    }
+};
+// ! =================== END  ========================
+
 // First paint: load page 1 as soon as script runs.
 loadItems();
+
+
+// ! =========== NEW by Gai Deng ===================== 
+window.openModal = async function (id) {
+    modal.classList.remove("hidden");
+    modalBody.innerHTML = "Loading...";
+    
+    try {
+        const res = await fetch(`/api/admin/items/${id}`, {
+            credentials: "include"
+        });
+        
+        if (!res.ok) {
+            modalBody.innerHTML = "Failed to load item";
+            return;
+        }
+        
+        const item = await res.json();
+        
+        modalBody.innerHTML = `
+        <h2>${item.item_name}</h2>
+        
+        ${item.image_path ? `
+            <img src="${item.image_path}"
+            style="width:100%;border-radius:8px;margin:10px 0;" />
+            ` : ""}
+            
+            <p><strong>Category:</strong> ${item.category}</p>
+            <p><strong>Campus:</strong> ${item.campus}</p>
+            <p><strong>Status:</strong> ${item.status}</p>
+            <p><strong>Location:</strong> ${item.location_details}</p>
+            <p><strong>Date:</strong> ${new Date(item.date_reported).toLocaleDateString()}</p>
+            <p><strong>Notes:</strong> ${item.notes || "-"}</p>
+            `;
+            
+        } catch (err) {
+            modalBody.innerHTML = "Error loading item";
+        }
+    };
+    
+    // 2.
+    catalogBody.addEventListener("click", (e) => {
+        const btn = e.target.closest(".view-btn");
+        if (!btn) return;
+
+        e.preventDefault();
+
+        const id = btn.dataset.id;
+        window.openModal(id);
+});
+    
+    // ! =================== END  ========================

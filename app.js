@@ -596,6 +596,51 @@ app.use((err, req, res, next) => {
   next();
 });
 
+
+
+// ! =========== NEW by Gai Deng ===================== ✅✅
+app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const rows = await allAsync(
+      `
+      SELECT 
+        id,
+        item_name,
+        category,
+        campus,
+        status,
+        location_details,
+        date_reported,
+        notes,
+        image_path
+      FROM items
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const item = rows[0];
+
+    // // Optional: normalize image path
+    // if (item.image_path) {
+    //   item.image_path = `/${item.image_path}`;
+    // }
+
+    return res.json(item);
+
+  } catch (error) {
+    console.error("Error fetching item by id:", error);
+    return res.status(500).json({ error: "Failed to fetch item" });
+  }
+});
+
 // Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
 
@@ -605,7 +650,7 @@ async function startServer() {
     await initializeDatabase();
     await ensureItemsImageColumn();
     await ensureAdminExists();
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running at http://localhost:${PORT}`);
     });
   } catch (error) {
@@ -613,7 +658,10 @@ async function startServer() {
     process.exit(1);
   }
 }
+// ! ============ END ====================
 
+// Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
+app.use(express.static(path.join(__dirname, "project_web")));
 // Entry point.
 startServer();
 
