@@ -77,10 +77,29 @@
 /* ========= Lost and Found items table ========= */
 .lost-table,
 .found-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: #fefce8;
+    width: 98%;
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    
     border: 2px solid black;
+    border-radius: 10px;
+    box-shadow: 4px 4px 0px 0px #000000;
+    overflow: hidden;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: #fefce8;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #fff9d6;
+}
+
+.lost-items-list,
+.found-items-list {
+    display: flex;
+    justify-content: center;
 }
 
 .lost-table th,
