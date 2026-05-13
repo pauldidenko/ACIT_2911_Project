@@ -15,6 +15,12 @@
  * Optional query: ?search=… — same text search idea as the admin list (name / description / location), still capped at 3 rows.
  * The full catalog stays on GET /api/admin/items (requires admin session).
  *
+ * --- Account dashboard stats (account.html) ---
+ * GET /api/admin/stats — admin session only (`requireAdmin`). Returns JSON counts from the `items`
+ * table for the four stat cards: totalItems (rows whose status is lost, found, or claimed only —
+ * excludes deleted and any other status), plus totalLost / totalFound / totalClaimed (exact status
+ * match). Wired from project_web/js/account.js after the session check passes.
+ *
  * - Items: GET/POST `/api/admin/items` is one `app.route()` so GET (list) and POST (create + optional image) stay together.
  * - Images: uploaded to `project_web/uploads/items`, URL stored in DB as `/uploads/items/<filename>`.
  * - `GET /add-item.html` injects `<meta name="app-api-origin">` so the add-item page always knows the real server URL.
@@ -307,6 +313,39 @@ app.get("/api/public/items/recent/found", listPublicRecentFound);
 // Simple protected test route (useful for debugging auth quickly).
 app.get("/api/admin/health", requireAdmin, (_req, res) => {
   res.json({ ok: true, message: "Admin session active" });
+});
+
+/**
+ * Dashboard aggregates for account.html (see project_web/js/account.js → loadAccountStats).
+ * Protected: same admin cookie as /api/admin/items; unauthenticated clients get 401 JSON.
+ *
+ * Counting rules (schema.sql `items.status`: lost | found | claimed | deleted):
+ * - totalItems: only rows in the three active workflow states; `deleted` is never counted.
+ * - totalLost / totalFound / totalClaimed: rows whose status equals that single value.
+ * With valid data, totalItems === totalLost + totalFound + totalClaimed.
+ */
+app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
+  try {
+    const rows = await allAsync(`
+      SELECT
+        SUM(CASE WHEN status IN ('lost', 'found', 'claimed') THEN 1 ELSE 0 END) AS total_items,
+        SUM(CASE WHEN status = 'lost' THEN 1 ELSE 0 END) AS total_lost,
+        SUM(CASE WHEN status = 'found' THEN 1 ELSE 0 END) AS total_found,
+        SUM(CASE WHEN status = 'claimed' THEN 1 ELSE 0 END) AS total_claimed
+      FROM items
+    `);
+    const row = rows[0] ?? {};
+    // CamelCase keys match what account.js expects when mapping onto #statTotal* elements.
+    return res.json({
+      totalItems: Number(row.total_items) || 0,
+      totalLost: Number(row.total_lost) || 0,
+      totalFound: Number(row.total_found) || 0,
+      totalClaimed: Number(row.total_claimed) || 0,
+    });
+  } catch (error) {
+    console.error("Failed to load admin stats:", error);
+    return res.status(500).json({ error: "Failed to load stats" });
+  }
 });
 
 // Main catalog API: GET list + POST create on same path (single Route — fixes POST not matching when registered separately on Express 5 / router).
