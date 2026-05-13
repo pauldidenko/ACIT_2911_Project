@@ -13,9 +13,9 @@
 </head>
 
 <body>
-    <div id="loginOverlay" class="login-overlay" aria-modal="true" role="dialog">
-        <div class="login-card">
-            <h2>Admin Login</h2>
+    <div id="loginOverlay" class="login-overlay" aria-hidden="true" aria-modal="true" role="dialog">
+        <div class="login-card" id="loginCard">
+            <h2>Login</h2>
             <form id="adminLoginForm">
                 <label>
                     Username
@@ -27,6 +27,7 @@
                 </label>
                 <p id="loginError" class="login-error"></p>
                 <button type="submit"><i class="bi bi-box-arrow-right"></i>Sign In</button>
+                <button type="button" class="login-cancel" id="closeLoginBtn">Cancel</button>
             </form>
         </div>
     </div>
@@ -36,9 +37,9 @@
         <nav class="nav-links">
             <ul class="nav-list">
                 <li><a href="index.html" class="home"><i class="bi bi-house"></i> Home</a></li>
-                <li><a href="catalog.html" class="catalog"><i class="bi bi-box-seam-fill"></i> Catalog</a></li>
-                <li><a href="account.html" class="account"><i class="bi bi-person-fill"></i> Account</a></li>
-                <li><a href="#" id="logoutBtn" class="login"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                <li id="navCatalogItem" hidden><a href="catalog.html" class="catalog"><i class="bi bi-box-seam-fill"></i> Catalog</a></li>
+                <li id="navAccountItem" hidden><a href="account.html" class="account"><i class="bi bi-person-fill"></i> Account</a></li>
+                <li><a href="#" id="sessionNavBtn" class="login"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
             </ul>   
         </nav>
     </header>
@@ -72,39 +73,27 @@
                         <thead>
                             <tr>
                                 <th>Item Name</th>
-                                <th>Category</th>
                                 <th>Date Reported</th>
                                 <th>Campus</th>
-                                <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="catalogBody">
                             <tr>
                                 <td>iPhone 15</td>
-                                <td>Electronics</td>
                                 <td>2026-05-11</td>
                                 <td>Downtown</td>
-                                <td>Lost</td>
-                                <td>none</td>
                             </tr>
                             
                             <tr>
                                 <td>Backpack</td>
-                                <td>Bags</td>
                                 <td>2026-05-10</td>
                                 <td>Burnaby</td>
-                                <td>Lost</td>
-                                <td>none</td>
                             </tr>
                             
                             <tr>
                                 <td>Student Card</td>
-                                <td>ID Card</td>
                                 <td>2026-05-09</td>
                                 <td>Downtown</td>
-                                <td>Lost</td>
-                                <td>none</td>
                             </tr>
                         </tbody>
                     </table>
@@ -117,39 +106,27 @@
                         <thead>
                             <tr>
                                 <th>Item Name</th>
-                                <th>Category</th>
                                 <th>Date Found</th>
                                 <th>Campus</th>
-                                <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="catalogBody">
                             <tr>
                                 <td>iPhone 15</td>
-                                <td>Electronics</td>
                                 <td>2026-05-11</td>
                                 <td>Downtown</td>
-                                <td>found</td>
-                                <td>none</td>
                             </tr>
                             
                             <tr>
                                 <td>Backpack</td>
-                                <td>Bags</td>
                                 <td>2026-05-10</td>
                                 <td>Burnaby</td>
-                                <td>found</td>
-                                <td>none</td>
                             </tr>
                             
                             <tr>
                                 <td>Student Card</td>
-                                <td>ID Card</td>
                                 <td>2026-05-09</td>
                                 <td>Downtown</td>
-                                <td>found</td>
-                                <td>none</td>
                             </tr>
                         </tbody>
                     </table>
@@ -161,8 +138,8 @@
     <div class="i-btn">
         <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
         <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
-        <a href="catalog.html" class="catalog-btn"><i class="bi bi-box-seam-fill"></i></a>
-        <a href="account.html" class="account1-btn"><i class="bi bi-person-fill"></i></a>
+        <a href="catalog.html" class="catalog-btn" id="navQuickCatalog" hidden><i class="bi bi-box-seam-fill"></i></a>
+        <a href="account.html" class="account1-btn" id="navQuickAccount" hidden><i class="bi bi-person-fill"></i></a>
     </div>
     
 
@@ -186,71 +163,7 @@
             <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
     </footer>
 
-    <!-- focus effect -->
-    <script>
-        const overlayEl = document.getElementById("loginOverlay");
-        const formEl = document.getElementById("adminLoginForm");
-        const errorEl = document.getElementById("loginError");
-        const logoutBtn = document.getElementById("logoutBtn");
-
-        async function checkSession() {
-            try {
-                const response = await fetch("/api/auth/session", { credentials: "include" });
-                const data = await response.json();
-                if (data.authenticated) {
-                    overlayEl.style.display = "none";
-                } else {
-                    overlayEl.style.display = "flex";
-                }
-            } catch (_error) {
-                overlayEl.style.display = "flex";
-            }
-        }
-
-        formEl.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            errorEl.textContent = "";
-
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value;
-
-            try {
-                const response = await fetch("/api/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-                if (!response.ok) {
-                    errorEl.textContent = data.error || "Login failed";
-                    return;
-                }
-
-                overlayEl.style.display = "none";
-                formEl.reset();
-            } catch (_error) {
-                errorEl.textContent = "Unable to reach server";
-            }
-        });
-
-        logoutBtn.addEventListener("click", async (event) => {
-            event.preventDefault();
-            try {
-                await fetch("/api/auth/logout", {
-                    method: "POST",
-                    credentials: "include"
-                });
-            } catch (_error) {
-                // Even if logout request fails, force login overlay locally.
-            }
-
-            overlayEl.style.display = "flex";
-        });
-
-        checkSession();
-    </script>
+    <script src="./js/index.js" defer></script>
 </body>
 
 </html>

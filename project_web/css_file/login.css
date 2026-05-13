@@ -6,11 +6,15 @@
 .login-overlay {
     position: fixed;
     inset: 0;
-    background: #ffffff;
-    display: flex;
+    background: rgba(255, 255, 255, 0.92);
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 2000;
+}
+
+.login-overlay.is-open {
+    display: flex;
 }
 
 .login-card {
@@ -51,6 +55,12 @@
     background: #0c4a6e;
     color: #fff;
     cursor: pointer;
+}
+
+.login-card button.login-cancel {
+    background: #e5e7eb;
+    color: #111827;
+    margin-top: 0.35rem;
 }
 
 .login-error {
