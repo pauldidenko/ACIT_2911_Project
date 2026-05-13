@@ -6,3 +6,5 @@ serv.err
 
 # DB backups from one-off tools
 *.bak*:Zone.Identifier
+
+.env
