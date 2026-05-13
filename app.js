@@ -628,11 +628,6 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
 
     const item = rows[0];
 
-    // // Optional: normalize image path
-    // if (item.image_path) {
-    //   item.image_path = `/${item.image_path}`;
-    // }
-
     return res.json(item);
 
   } catch (error) {
@@ -640,6 +635,7 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch item" });
   }
 });
+// ! ============ END ====================
 
 // Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
@@ -658,7 +654,6 @@ async function startServer() {
     process.exit(1);
   }
 }
-// ! ============ END ====================
 
 // Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
