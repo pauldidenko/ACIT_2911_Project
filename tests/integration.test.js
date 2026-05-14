@@ -9,10 +9,11 @@ contract for the browser: 200 JSON, `items` is an array with at most 3 rows, and
 not leak private fields like `description` (only the whitelisted columns from app.js).
 */
 
-import { describe, it, before, beforeEach } from "node:test";
+import { describe, it, before, beforeEach, after } from "node:test";
 import assert from "node:assert/strict";
 import supertest from "supertest";
 import app from "../app.js";
+import { db } from "../app.js";
 
 describe("GET /", () => {
   //tests web apps home page is up and running as normal
@@ -121,4 +122,8 @@ describe("GET /api/public/items/recent (home preview)", () => {
       assert.ok(!("description" in row));
     }
   });
+});
+
+after(() => {
+  db.close();
 });
