@@ -596,8 +596,6 @@ app.use((err, req, res, next) => {
   next();
 });
 
-
-
 // ! =========== NEW by Gai Deng ===================== ✅✅
 app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
   const id = req.params.id;
@@ -619,7 +617,7 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
       WHERE id = ?
       LIMIT 1
       `,
-      [id]
+      [id],
     );
 
     if (rows.length === 0) {
@@ -629,7 +627,6 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
     const item = rows[0];
 
     return res.json(item);
-
   } catch (error) {
     console.error("Error fetching item by id:", error);
     return res.status(500).json({ error: "Failed to fetch item" });
@@ -658,6 +655,12 @@ async function startServer() {
 // Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
 // Entry point.
-startServer();
 
+// Only start listening when run directly (node app.js / npm start),
+// not when imported by tests (import app from "../app.js").
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  startServer();
+}
+
+export { db };
 export default app;
