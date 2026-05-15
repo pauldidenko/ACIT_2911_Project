@@ -14,5 +14,3 @@
 ## About foundIt
 
 **foundIt** is a simple lost & found tracker designed for BCIT security to log instances of items reported lost on campus as well as items that have been found.
-
-test
