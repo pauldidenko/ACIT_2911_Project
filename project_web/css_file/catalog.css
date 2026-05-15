@@ -389,6 +389,7 @@
 
 
 /* ! ============== New By Gai Deng - modal css ========== */
+/* Full-screen dimmed overlay; flex keeps the white card centred on any screen size. */
 .modal {
     position: fixed;
     top: 0;
@@ -402,13 +403,29 @@
     z-index: 9999;
 }
 
+/*
+ * View / delete popup: cap height so a long item never runs off the viewport.
+ * Extra top padding leaves room for the × close button. The inner #modalBody scrolls
+ * on its own so the header area and close control stay usable.
+ */
 .modal-content {
     background: white;
     padding: 20px;
+    padding-top: 36px;
     border-radius: 10px;
     width: 500px;
     max-width: 90%;
+    max-height: 90vh;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#modalBody {
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .hidden {

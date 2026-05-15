@@ -57,6 +57,33 @@ function toTitleCase(value) {
 }
 
 /**
+ * One line for the View modal: “Date lost” vs “Date found”.
+ * In the real data, found items often still have a date_lost filled in, so we can’t
+ * always prefer date_lost first — we pick the single date that makes sense, and if
+ * both exist we let the row’s status decide (found → show date found, lost → date lost).
+ */
+function buildItemDateLine(item) {
+    const hasLost = Boolean(item.date_lost && String(item.date_lost).trim());
+    const hasFound = Boolean(item.date_found && String(item.date_found).trim());
+
+    if (hasFound && !hasLost) {
+        return `<p><strong>Date Found:</strong> ${formatDate(item.date_found)}</p>`;
+    }
+    if (hasLost && !hasFound) {
+        return `<p><strong>Date Lost:</strong> ${formatDate(item.date_lost)}</p>`;
+    }
+    if (hasFound && hasLost) {
+        if (item.status === "found") {
+            return `<p><strong>Date Found:</strong> ${formatDate(item.date_found)}</p>`;
+        }
+        if (item.status === "lost") {
+            return `<p><strong>Date Lost:</strong> ${formatDate(item.date_lost)}</p>`;
+        }
+    }
+    return "";
+}
+
+/**
  * Builds the table body HTML from the array of item objects returned by the API.
  * Uses template literals (`backticks`) to inject values — same idea as Python f-strings.
  */
@@ -205,6 +232,13 @@ modal.onclick = (e) => {
         modal.classList.add("hidden");
     }
 };
+
+// Same as many desktop apps: Escape closes the popup if it’s open (view or delete confirm).
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+        modal.classList.add("hidden");
+    }
+});
 // ! =================== END  ========================
 
 // First paint: load page 1 as soon as script runs.
@@ -227,7 +261,9 @@ window.openModal = async function (id) {
         }
         
         const item = await res.json();
-        
+
+        // Detail panel for “View”: matches the DB fields we care about on the floor —
+        // where it was lost/found vs where it’s stored, reporting + event dates, then claimant info above staff notes.
         modalBody.innerHTML = `
         <h2>${item.item_name}</h2>
         
@@ -239,8 +275,12 @@ window.openModal = async function (id) {
             <p><strong>Category:</strong> ${item.category}</p>
             <p><strong>Campus:</strong> ${item.campus}</p>
             <p><strong>Status:</strong> ${item.status}</p>
-            <p><strong>Location:</strong> ${item.location_details}</p>
-            <p><strong>Date:</strong> ${new Date(item.date_reported).toLocaleDateString()}</p>
+            <p><strong>Lost/Found Location:</strong> ${item.location_details || "-"}</p>
+            <p><strong>Storage Location:</strong> ${item.stored_location || "-"}</p>
+            <p><strong>Date Reported:</strong> ${formatDate(item.date_reported)}</p>
+            ${buildItemDateLine(item)}
+            <p><strong>Claimant Name:</strong> ${item.claimant_name || "-"}</p>
+            <p><strong>Claimant Contact:</strong> ${item.claimant_contact || "-"}</p>
             <p><strong>Notes:</strong> ${item.notes || "-"}</p>
             `;
             

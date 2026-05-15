@@ -382,16 +382,19 @@ async function listAdminItems(req, res) {
   const sortExpression =
     sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
 
-  // Build dynamic WHERE clause only for provided filters.
-  // const where = [];
-  // const params = [];
-
-
-  // Build dynamic WHERE clause only for provided filters.
-  // Default: only show active catalog items (lost + found)
-  const where = ["status IN ('lost', 'found')"];
+  // Piece together WHERE + bound values in one pass. Older code wiped the WHERE array when you
+  // chose a status filter but forgot to reset `params`, so SQLite got extra bindings and blew up
+  // with SQLITE_RANGE — annoying bug that only showed up after you’d already typed a search, etc.
+  const where = [];
   const params = [];
 
+  if (status) {
+    where.push("status = ?");
+    params.push(status);
+  } else {
+    // No dropdown choice: keep the table useful by hiding claimed/deleted unless you filter to them.
+    where.push("status IN ('lost', 'found')");
+  }
 
   if (search) {
     where.push(
@@ -405,15 +408,6 @@ async function listAdminItems(req, res) {
     params.push(category);
   }
 
-  // ! new
-  // If a specific status filter is selected,
-  // override the default lost/found filter.
-  if (status) {
-    where.length = 0;
-    where.push("status = ?");
-    params.push(status);
-  }
-  // ! END
   if (campus) {
     where.push("campus = ?");
     params.push(campus);
@@ -434,7 +428,7 @@ async function listAdminItems(req, res) {
     const totalItems = countRows[0]?.total || 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
-    // Query 2: current page of item rows.
+    // Query 2: current page — includes everything the table needs, plus claimant fields for clients that want them without a second request.
     const itemRows = await allAsync(
       `
       SELECT
@@ -610,6 +604,8 @@ app.use((err, req, res, next) => {
 });
 
 // ! =========== NEW by Gai Deng ===================== ✅✅
+// Single-row fetch for the catalog “View” popup (and anything else that needs the full story on one item).
+// Includes stored vs reported locations, both date fields, claimant details — same columns the list view doesn’t have room for.
 app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
   const id = req.params.id;
 
@@ -623,7 +619,12 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
         campus,
         status,
         location_details,
+        stored_location,
+        date_lost,
+        date_found,
         date_reported,
+        claimant_name,
+        claimant_contact,
         notes,
         image_path
       FROM items
