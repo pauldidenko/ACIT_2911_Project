@@ -5,6 +5,8 @@ name: Push & Test Express App
 on:
   push:
     branches: ["dev"]
+  pull-request:
+    branches: ["main"]
 
 jobs:
   builds:
@@ -20,5 +22,3 @@ jobs:
         run: npm install
       - name: Run Tests
         run: npm test
-
-# Will add pull request to main integration later

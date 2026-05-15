@@ -6,9 +6,9 @@
 | ---------- | --------- |
 | Troy       | A01479290 |
 | Ariana     | A01497071 |
-| Olena      | A01510135 |
-| Gai        | A0        |
-| Paul       | A0        |
+| Olena      | A1510135  |
+| Gai        | A01484944 |
+| Paul       | A01482371 |
 | Daniel     | A01223223 |
 
 ## About foundIt
