@@ -92,8 +92,18 @@ tbody tr:nth-child(odd) {
     background-color: #fefce8;
 }
 
+tbody tr:nth-child(odd):hover {
+    filter: brightness(1.2);
+    box-shadow: inset 6px 0 0 #f472b6;
+}
+
 tbody tr:nth-child(even) {
     background-color: #fff9d6;
+}
+
+tbody tr:nth-child(even):hover {
+    filter: brightness(1.2);
+    box-shadow: inset 6px 0 0 #f472b6;
 }
 
 .lost-items-list,
