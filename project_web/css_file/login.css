@@ -1,0 +1,78 @@
+/*
+ * login.css — Full-screen login overlay used from index.html (staff login → session cookie).
+ *
+ * Teammates:
+ * - Behaviour is driven by project_web/js/index.js (add/remove class `is-open` on #loginOverlay).
+ * - The overlay is hidden by default (display: none) so the home page stays public until “Login”.
+ * - Background is solid white (#ffffff) so nothing from the page shows through behind the modal
+ *   (we used to use a translucent white; product decision was a cleaner full-screen white sheet).
+ */
+
+.login-overlay {
+    position: fixed;
+    inset: 0;
+    /* Solid white backdrop when the login sheet is open (covers the entire viewport). */
+    background: #ffffff;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+/* JS toggles this class when the user opens/closes the login dialog. */
+.login-overlay.is-open {
+    display: flex;
+}
+
+.login-card {
+    width: min(420px, 92vw);
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.login-card h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.login-card form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.login-card label {
+    font-weight: 600;
+}
+
+.login-card input {
+    width: 100%;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 0.2rem;
+}
+
+.login-card button {
+    padding: 0.6rem;
+    border: 0;
+    border-radius: 8px;
+    background: #0c4a6e;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* Secondary action to dismiss the modal without submitting (wired in index.js). */
+.login-card button.login-cancel {
+    background: #e5e7eb;
+    color: #111827;
+    margin-top: 0.35rem;
+}
+
+.login-error {
+    color: #b91c1c;
+    min-height: 1.25rem;
+    font-size: 0.92rem;
+}

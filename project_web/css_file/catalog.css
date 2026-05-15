@@ -1,0 +1,457 @@
+/*
+ * catalog.css — Styles used only by catalog.html (items table, filters, pagination).
+ *
+ * Linked from catalog.html as: <link rel="stylesheet" href="./css_file/catalog.css">
+ *
+ * Note: Some class names still say "lost-" (e.g. .lost-catalog, .lost-table) from older naming;
+ *       they are just CSS identifiers — changing them would require updating catalog.html too.
+ *
+ * Buttons: `.catalog-reset-btn` (orange) and `.catalog-add-btn` (light green link-button) share the same
+ *           outline/shadow; colours distinguish reset vs navigate to add-item.html.
+ */
+
+/* ========= Main catalog section (white card around everything) ========= */
+.lost-catalog {
+    max-width: 98%;
+    margin: 20px auto 20px auto;
+    padding: 30px clamp(20px, 5vw, 80px);
+
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 12px;
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+/* Title row + “+ Add Item” link */
+.catalog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.catalog-header h2 {
+    margin: 0;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+/* ========= Filter/search panel ========= */
+/*
+ * Layout note (why this changed):
+ * We originally used a fixed 6-column grid for `.catalog-controls`, but catalog.html actually
+ * places **eight** controls in this row (search + 5 filters + 2 sort dropdowns + reset). That meant
+ * the last two controls sat on a second row with “empty” grid tracks beside them — looked offset.
+ *
+ * Fix: `repeat(auto-fit, minmax(170px, 1fr))` lets the browser reflow as many equal-width columns
+ * as fit inside the light-blue outer box, so every control stays aligned and padded inside the card
+ * at different window widths. `min-width: 0` on direct children avoids flex/grid blow-out from
+ * long <select> labels overflowing the panel.
+ */
+.catalog-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    align-items: stretch;
+
+    margin-bottom: 30px;
+    padding: 18px;
+    box-sizing: border-box;
+
+    background-color: #eff6ff;
+    border: 2px solid black;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0px 0px #000000;
+
+    position: sticky;
+    top: 0;
+    z-index: 50;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Each filter/search child is a grid item; this prevents long option text from breaking the layout. */
+.catalog-controls > * {
+    min-width: 0;
+}
+
+/* Makes the whole filter box feel interactive */
+.catalog-controls:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px 0px #000000;
+}
+
+/* Shared look for text search and all <select> filters */
+.search-box,
+.filter-box {
+    width: 100%;
+    height: 50px;
+    padding: 10px 14px;
+
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 1rem;
+    background-color: white;
+    box-shadow: 3px 3px 0px 0px #000000;
+    cursor: pointer;
+
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
+}
+
+/* Search input */
+.search-box {
+    min-width: 0;
+    cursor: text;
+}
+
+/* Input/filter hover effect */
+.search-box:hover,
+.filter-box:hover {
+    background-color: #fff9d6;
+}
+
+/* Input/filter focus effect */
+.search-box:focus,
+.filter-box:focus {
+    outline: none;
+    background-color: white;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+/* Catalog action buttons — same chunky outline as filters; colour differentiates role */
+.catalog-reset-btn,
+.catalog-add-btn {
+    height: 50px;
+    padding: 10px 18px;
+
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 3px 3px 0px 0px #000000;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    white-space: nowrap;
+
+    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Orange “Reset filters” */
+.catalog-reset-btn {
+    width: 100%;
+    background-color: #fdba74;
+    color: #1c1917;
+}
+
+.catalog-reset-btn:hover {
+    background-color: #fb923c;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.catalog-reset-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* Light green “+ Add Item” — same shape as reset, links to add-item */
+.catalog-add-btn {
+    background-color: #bbf7d0;
+    color: #14532d;
+}
+
+.catalog-add-btn:hover {
+    background-color: #86efac;
+    color: #14532d;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.catalog-add-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.catalog-add-btn:focus-visible {
+    outline: 3px solid #166534;
+    outline-offset: 2px;
+}
+
+/* ========= Table wrapper ========= */
+/* Lets the table scroll sideways on small screens instead of breaking the layout */
+.table-wrapper {
+    margin-top: 28px;
+    overflow-x: auto;
+
+    background-color: #fefce8;
+    border: 2px solid black;
+    border-radius: 14px;
+    box-shadow: 6px 6px 0px 0px #000000;
+
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Makes the whole table feel more alive */
+.table-wrapper:hover {
+    box-shadow: 8px 8px 0px 0px #000000;
+}
+
+/* ========= Data table ========= */
+.lost-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background-color: #fefce8;
+}
+
+/* Table cells */
+.lost-table th,
+.lost-table td {
+    padding: 18px 22px;
+    text-align: left;
+    border-bottom: 1.5px solid black;
+}
+
+/* Table heading */
+.lost-table th {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    font-size: 1rem;
+}
+/* Makes the whole table container slightly lift on hover */
+.table-wrapper {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.table-wrapper:hover {
+    transform: translateY(-3px);
+    box-shadow: 8px 8px 0px 0px #000000;
+}
+
+/* Rounded top corners for table header */
+.lost-table th:first-child {
+    border-top-left-radius: 11px;
+}
+
+.lost-table th:last-child {
+    border-top-right-radius: 11px;
+}
+
+/* Optional: header hover */
+.lost-table th:hover {
+    background-color: #2563eb;
+}
+
+/* Smooth effect for table rows */
+.lost-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+/* Alternating row color to make the table easier to read */
+.lost-table tbody tr:nth-child(even) {
+    background-color: #fff9d6;
+}
+
+/* Row hover effect to make the table feel more interactive */
+.lost-table tbody tr:hover {
+    background-color: #eaf3ff;
+    cursor: pointer;
+}
+
+/* Add pink accent line on the left when hovering */
+.lost-table tbody tr:hover td:first-child {
+    box-shadow: inset 6px 0 0 #f472b6;
+    padding-left: 24px;
+    transition: box-shadow 0.2s ease, padding-left 0.2s ease;
+}
+
+/* No double border under the last row */
+.lost-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* ========= Status pills (lost / found / claimed / deleted) ========= */
+/* catalog.js adds class="status <status>" on a <span>; color comes from .status.<value> below */
+.status {
+    display: inline-block;
+    min-width: 75px;
+    text-align: center;
+    padding: 7px 12px;
+    border: 2px solid black;
+    border-radius: 999px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 2px 2px 0px 0px #000000;
+
+    transition: transform 0.2s ease;
+}
+
+/* Make status badge slightly pop on row hover */
+.lost-table tbody tr:hover .status {
+    transform: scale(1.05);
+}
+
+.status.lost {
+    background-color: #f472b6;
+    color: black;
+}
+
+/* Legacy name — kept in case old markup still uses “returned” */
+.status.returned {
+    background-color: #c4b5fd;
+    color: black;
+}
+
+.status.found {
+    background-color: #86efac;
+    color: black;
+}
+
+.status.claimed {
+    background-color: #bfdbfe;
+    color: black;
+}
+
+.status.deleted {
+    background-color: #d1d5db;
+    color: black;
+}
+
+/* ========= Row action links (View / Edit / Delete) ========= */
+/* Buttons / links styled like chunky buttons */
+.action-btn {
+    display: inline-block;
+    margin: 3px;
+    padding: 8px 13px;
+
+    border: 2px solid black;
+    border-radius: 9px;
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    box-shadow: 3px 3px 0px 0px #000000;
+
+    transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.15s ease;
+}
+
+.view-btn {
+    background-color: #bfdbfe;
+}
+
+.edit-btn {
+    background-color: #fef08a;
+}
+
+.delete-btn {
+    background-color: #fca5a5;
+}
+
+.action-btn:hover {
+    background-color: black;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 5px 5px 0px 0px #000000;
+}
+
+.action-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* ========= Pagination ========= */
+/* Previous / Next under the table */
+.catalog-pagination {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Dim Prev/Next when JS sets disabled on the button */
+.catalog-pagination .action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ========= Narrow screens: stack filters vertically, full-width inputs ========= */
+/*
+ * On phones / narrow tablets we override the auto-fit grid above and force one column so every
+ * control spans the full width of the blue filter card (easier to tap, no horizontal scroll).
+ */
+
+
+/* ! ============== New By Gai Deng - modal css ========== */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+    position: relative;
+}
+
+.hidden {
+    display: none;
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* ! =============== END ===================== */
+
+/* * ==== added ==== */
+.lost-table td:last-child {
+    white-space: nowrap;
+    min-width: 220px;
+}
+.action-btn {
+    display: inline-block;
+    margin: 3px 5px;
+}
+
+@media screen and (max-width: 842px) {
+    .catalog-controls {
+        grid-template-columns: 1fr;
+        position: static;
+        overflow-x: visible;
+    }
+
+    .search-box,
+    .filter-box,
+    .catalog-reset-btn,
+    .catalog-add-btn {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .lost-table th,
+    .lost-table td {
+        padding: 14px 16px;
+    }
+}

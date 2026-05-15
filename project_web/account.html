@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<!--
+  account.html — Admin-facing account summary (quick links, live stats).
+
+  Security: ./js/account.js runs on defer. It calls GET /api/auth/session first; if not authenticated,
+  the browser is sent to index.html before sensitive UI is relied on.
+
+  Stats row (.stats-grid): the four <p> elements use ids statTotalItems, statTotalLost, statTotalFound,
+  statTotalClaimed. account.js replaces the initial "—" with numbers from GET /api/admin/stats after
+  login is confirmed. That endpoint is admin-only; deleted items are excluded from total items — see
+  app.js comments on /api/admin/stats for exact counting rules.
+-->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCIT lost and found | Account</title>
+    <link rel="stylesheet" href="./css_file/style.css">
+     <link rel="stylesheet" href="./css_file/account.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+
+<body>
+    <header class="navbar">
+        <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
+        <nav class="nav-links">
+            <ul class="nav-list">
+                <li><a href="index.html" class="home"><i class="bi bi-house"></i> Home</a></li>
+                <li><a href="catalog.html" class="catalog"><i class="bi bi-box-seam-fill"></i> Catalog</a></li>
+                <li><a href="account.html" class="account"><i class="bi bi-person-fill"></i> Account</a></li>
+                <li><a href="#" id="logoutBtn" class="login"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+
+    <section class="account-hero">
+        <div class="account-hero-content">
+            <h1><i class="bi bi-person"></i>Account Summary</h1>
+        </div>
+    </section>
+
+    <section class="account-section">
+
+        <div class="account-grid">
+
+            <div class="account-card profile-card">
+                <h2>Account Information</h2>
+
+                <div class="account-info-row">
+                    <span>Username:</span>
+                    <!-- Default text replaced by account.js from /api/auth/session when the user is logged in. -->
+                    <strong id="accountUsername">admin</strong>
+                </div>
+
+                <div class="account-info-row">
+                    <span>Role:</span>
+                    <strong>Security Admin</strong>
+                </div>
+
+                <div class="account-info-row">
+                    <span>Access:</span>
+                    <strong>BCIT Lost and Found Catalog</strong>
+                </div>
+
+                <div class="account-info-row">
+                    <span>Status:</span>
+                    <strong class="active-status">Active</strong>
+                </div>
+            </div>
+
+            <div class="account-card">
+                <h2>Quick Actions</h2>
+
+                <div class="quick-actions">
+                    <a href="catalog.html" class="account-btn">View Catalog</a>
+                    <a href="add-item.html" class="account-btn">+ Add Item</a>
+                    <a href="index.html" class="account-btn secondary-btn">Back to Home</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Item counts: filled by ./js/account.js (loadAccountStats) from GET /api/admin/stats. -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total items</h3>
+                <!-- Non-deleted workflow rows only (lost + found + claimed); see backend route. -->
+                <p id="statTotalItems">—</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total lost</h3>
+                <p id="statTotalLost">—</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total found</h3>
+                <p id="statTotalFound">—</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Total claimed</h3>
+                <p id="statTotalClaimed">—</p>
+            </div>
+        </div>
+
+    </section>
+    <main class="card">
+        <div class="container"></div>
+    </main>
+
+    <!-- Session guard, logout, and dashboard stats: ./js/account.js (defer — runs after DOM is parsed). -->
+    <script src="./js/account.js" defer></script>
+</body>
+<!-- Footer -->
+<div class="i-btn">
+        <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
+    <a href="catalog.html" class="catalog-btn"><i class="bi bi-box-seam-fill"></i></a>
+    <a href="account.html" class="account1-btn"><i class="bi bi-person"></i></a>
+</div>
+
+
+<footer class="footer">
+    <div class="footer-left">
+        <h3>Contact</h3>
+        <p><a href="mailto:lost@bcit.ca">lost@bcit.ca</a></p>
+        <p>416-280-5555</p>
+    </div>
+
+    <div class="footer-center">
+        <h3>Address</h3>
+        <p><a href="https://www.bcit.ca/">BCIT Burnaby, BC</a></p>
+    </div>
+
+    <div class="footer-right">
+        <h3>Follow Us</h3>
+        <p><a href="https://www.instagram.com/bcitlostandfound/">Instagram</a></p>
+        <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
+    </div>
+    <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
+</footer>
+
+<!-- focus effect -->
+</html>

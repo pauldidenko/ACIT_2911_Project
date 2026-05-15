@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<!-- catalog.html — Admin items table; loads data from GET /api/admin/items (see catalog.js). -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCIT lost and found | Catalog</title>
+    <link rel="stylesheet" href="./css_file/style.css">
+    <link rel="stylesheet" href="./css_file/catalog.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <header class="navbar">
+        <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
+        <nav class="nav-links">
+            <ul class="nav-list">
+                <li><a href="index.html" class="home"><i class="bi bi-house"></i> Home</a></li>
+                <li><a href="catalog.html" class="catalog"><i class="bi bi-box-seam-fill"></i> Catalog</a></li>
+                <li><a href="account.html" class="account"><i class="bi bi-person-fill"></i> Account</a></li>
+                <li><a href="#" id="logoutBtn" class="login"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="lost-catalog">
+        <div class="catalog-header">
+            <h2>Items Catalog</h2>
+            <a href="add-item.html" class="catalog-add-btn"><i class="bi bi-plus-circle"></i> Add Item</a>
+        </div>
+
+        <div class="catalog-controls">
+            <input id="searchInput" type="text" placeholder="Search item, notes, or location..." class="search-box">
+
+            <select id="categoryFilter" class="filter-box">
+                <option value="">All Categories</option>
+                <option>Electronics</option>
+                <option>Accessories</option>
+                <option>Clothing</option>
+                <option>Keys & ID</option>
+                <option>School Supplies</option>
+                <option>Bottles & containers</option>
+                <option>Sports & Fitness</option>
+                <option>Documents</option>
+                <option>Misc</option>
+            </select>
+
+            <select id="statusFilter" class="filter-box">
+                <option value="">All Statuses</option>
+                <option value="lost">Lost</option>
+                <option value="found">Found</option>
+                <option value="claimed">Claimed</option>
+                <option value="deleted">Deleted</option>
+            </select>
+
+            <select id="campusFilter" class="filter-box">
+                <option value="">All Campuses</option>
+                <option>Burnaby</option>
+                <option>Downtown</option>
+                <option>Aerospace</option>
+            </select>
+
+            <input id="dateFromFilter" type="date" class="filter-box">
+
+            <select id="sortBy" class="filter-box">
+                <option value="date_reported">Sort: Date Reported</option>
+                <option value="item_name">Sort: Item Name</option>
+                <option value="category">Sort: Category</option>
+                <option value="campus">Sort: Campus</option>
+                <option value="status">Sort: Status</option>
+            </select>
+
+            <select id="sortDir" class="filter-box">
+                <option value="desc">Order: Descending</option>
+                <option value="asc">Order: Ascending</option>
+            </select>
+
+            <button id="resetFiltersBtn" type="button" class="catalog-reset-btn"><i class="bi bi-arrow-counterclockwise"></i>Reset filters</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="lost-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Category</th>
+                        <th>Date Reported</th>
+                        <th>Campus</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="catalogBody"></tbody>
+            </table>
+        </div>
+
+        <div class="catalog-pagination">
+            <button id="prevPageBtn" class="action-btn view-btn" type="button">Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextPageBtn" class="action-btn view-btn" type="button">Next</button>
+        </div>
+    </section>
+
+    <!-- ! ===== New by Gai Deng ===== -->
+    <div id="viewModal" class="modal hidden">
+        <div class="modal-content">
+            <span id="closeModal" class="close-btn">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+    <!-- ! ============== END =============== -->
+
+    <script src="./js/catalog.js"></script>
+</body>
+
+<!-- Footer -->
+    <div class="i-btn">
+        <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
+        <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
+        <a href="catalog.html" class="catalog-btn"><i class="bi bi-box-seam-fill"></i></a>
+        <a href="account.html" class="account1-btn"><i class="bi bi-person"></i></a>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-left">
+            <h3>Contact</h3>
+            <p><a href="mailto:lost@bcit.ca">lost@bcit.ca</a></p>
+            <p>416-280-5555</p>
+        </div>
+        
+        <div class="footer-center">
+            <h3>Address</h3>
+            <p><a href="https://www.bcit.ca/">BCIT Burnaby, BC</a></p>
+        </div>
+
+        <div class="footer-right">
+            <h3>Follow Us</h3>
+            <p><a href="https://www.instagram.com/bcitlostandfound/">Instagram</a></p>
+            <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
+        </div>
+            <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
+    </footer>
+
+    <!-- focus effect -->
+</html>

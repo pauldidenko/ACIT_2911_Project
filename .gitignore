@@ -1,0 +1,10 @@
+node_modules
+
+# Local redirect dumps (e.g. PowerShell Start-Process stdout/stderr)
+serv.out
+serv.err
+
+# DB backups from one-off tools
+*.bak*:Zone.Identifier
+
+.env
