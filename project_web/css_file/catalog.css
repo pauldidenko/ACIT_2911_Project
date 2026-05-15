@@ -428,6 +428,36 @@
     min-height: 0;
 }
 
+/* Edit item: same scroll behaviour as View, but a bit wider so the two-column add-item form fits. */
+.modal-content.modal-content--edit {
+    width: min(720px, 94vw);
+    max-width: 94vw;
+}
+
+/*
+ * Preview of the existing upload in the edit form (not the huge hero image from View).
+ * Keeps the preview from blowing up the scroll area.
+ */
+#modalBody .catalog-edit-current-img {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 2px solid black;
+    margin-top: 8px;
+}
+
+/* Inline validation / server error strip above the edit form (filled by catalog.js on failed PUT). */
+#modalBody .catalog-edit-form-error {
+    margin: 0 0 12px 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 2px solid #991b1b;
+    background: #fef2f2;
+    color: #991b1b;
+    font-weight: bold;
+}
+
 .hidden {
     display: none;
 }

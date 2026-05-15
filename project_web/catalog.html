@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BCIT lost and found | Catalog</title>
     <link rel="stylesheet" href="./css_file/style.css">
+    <!-- add-item.css: shared form look for the catalog “Edit” popup (same grid, inputs, Save/Cancel as add-item.html). -->
+    <link rel="stylesheet" href="./css_file/add-item.css">
     <link rel="stylesheet" href="./css_file/catalog.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
@@ -101,8 +103,9 @@
     </section>
 
     <!-- ! ===== New by Gai Deng ===== -->
+    <!-- Modal shell: #modalContent is the white card (catalog.js toggles .modal-content--edit for a wider edit form). -->
     <div id="viewModal" class="modal hidden">
-        <div class="modal-content">
+        <div id="modalContent" class="modal-content">
             <span id="closeModal" class="close-btn">&times;</span>
             <div id="modalBody"></div>
         </div>

@@ -552,6 +552,151 @@ async function handleCreateItem(req, res) {
   }
 }
 
+// Admin catalog: update an existing row (multipart, same field names as POST create / add-item.html).
+// The edit form in catalog.js PUTs here; we keep date_claimed if the form doesn’t send it, and optionally swap the image file on disk.
+async function handleUpdateItem(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "Invalid item id" });
+  }
+
+  let existingRows;
+  try {
+    existingRows = await allAsync(
+      `
+      SELECT id, image_path, date_claimed
+      FROM items
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [id],
+    );
+  } catch (error) {
+    console.error("Update item — lookup failed:", error);
+    return res.status(500).json({ error: "Failed to update item" });
+  }
+
+  if (existingRows.length === 0) {
+    return res.status(404).json({ error: "Item not found" });
+  }
+
+  const existing = existingRows[0];
+  const b = req.body ?? {};
+  const item_name = String(b.item_name ?? "").trim();
+  const category = String(b.category ?? "").trim();
+  const campus = String(b.campus ?? "").trim();
+  const status = String(b.status ?? "").trim();
+
+  const allowedCategories = [
+    "Electronics",
+    "Accessories",
+    "Clothing",
+    "Keys & ID",
+    "School Supplies",
+    "Bottles & containers",
+    "Sports & Fitness",
+    "Documents",
+    "Misc",
+  ];
+  const allowedCampus = ["Burnaby", "Downtown", "Aerospace"];
+  const allowedStatus = ["lost", "found", "claimed", "deleted"];
+
+  if (!item_name || !category || !campus || !status) {
+    return res.status(400).json({
+      error:
+        "Missing required fields: item_name, category, campus, and status are required.",
+    });
+  }
+  if (!allowedCategories.includes(category)) {
+    return res.status(400).json({ error: "Invalid category." });
+  }
+  if (!allowedCampus.includes(campus)) {
+    return res.status(400).json({ error: "Invalid campus." });
+  }
+  if (!allowedStatus.includes(status)) {
+    return res.status(400).json({ error: "Invalid status." });
+  }
+
+  const description = String(b.description ?? "").trim() || null;
+  const location_details = String(b.location_details ?? "").trim() || null;
+  const stored_location = String(b.stored_location ?? "").trim() || null;
+  const date_lost = String(b.date_lost ?? "").trim() || null;
+  const date_found = String(b.date_found ?? "").trim() || null;
+  // Edit form doesn’t include date_claimed yet — don’t wipe it on every save.
+  const date_claimed =
+    String(b.date_claimed ?? "").trim() || existing.date_claimed || null;
+  const claimant_name = String(b.claimant_name ?? "").trim() || null;
+  const claimant_contact = String(b.claimant_contact ?? "").trim() || null;
+  const notes = String(b.notes ?? "").trim() || null;
+
+  let image_path = existing.image_path;
+  // New file optional: if staff picked one, store new path and try to delete the previous upload from disk.
+  if (req.file) {
+    if (
+      existing.image_path &&
+      existing.image_path.startsWith("/uploads/items/")
+    ) {
+      const rel = existing.image_path.replace(/^\//, "");
+      const diskPath = path.join(__dirname, "project_web", rel);
+      try {
+        fs.unlinkSync(diskPath);
+      } catch (_unlinkErr) {
+        /* previous file already gone — ignore */
+      }
+    }
+    image_path = `/uploads/items/${req.file.filename}`;
+  }
+
+  try {
+    await runAsync(
+      `
+      UPDATE items SET
+        item_name = ?,
+        description = ?,
+        category = ?,
+        campus = ?,
+        location_details = ?,
+        stored_location = ?,
+        date_lost = ?,
+        date_found = ?,
+        date_claimed = ?,
+        status = ?,
+        claimant_name = ?,
+        claimant_contact = ?,
+        notes = ?,
+        image_path = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [
+        item_name,
+        description,
+        category,
+        campus,
+        location_details,
+        stored_location,
+        date_lost,
+        date_found,
+        date_claimed,
+        status,
+        claimant_name,
+        claimant_contact,
+        notes,
+        image_path,
+        id,
+      ],
+    );
+
+    return res.json({ success: true, id, image_path });
+  } catch (error) {
+    console.error("Failed to update item:", error);
+    return res.status(500).json({
+      error: "Failed to update item",
+      detail: String(error?.message || error),
+    });
+  }
+}
+
 app
   .route("/api/admin/items")
   .get(requireAdmin, listAdminItems)
@@ -585,6 +730,20 @@ app.get("/add-item.html", (req, res) => {
   }
 });
 
+// Update existing catalog row (same multipart contract as POST /api/admin/items — used by catalog edit popup).
+app.put(
+  "/api/admin/items/:id",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleUpdateItem,
+);
+app.put(
+  "/admin/items/:id",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleUpdateItem,
+);
+
 // Multer errors → JSON (keep before static so POST failures never fall through to HTML-only stacks).
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -604,8 +763,7 @@ app.use((err, req, res, next) => {
 });
 
 // ! =========== NEW by Gai Deng ===================== ✅✅
-// Single-row fetch for the catalog “View” popup (and anything else that needs the full story on one item).
-// Includes stored vs reported locations, both date fields, claimant details — same columns the list view doesn’t have room for.
+// Single-row JSON for catalog “View” (read-only) and “Edit” (form pre-fill). Includes `description` because the edit form matches add-item.html.
 app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
   const id = req.params.id;
 
@@ -615,6 +773,7 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
       SELECT 
         id,
         item_name,
+        description,
         category,
         campus,
         status,

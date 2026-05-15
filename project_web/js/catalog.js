@@ -12,8 +12,11 @@
  * API: GET `/api/admin/items` with query params (see app.js `listAdminItems`). Same origin as catalog page when using `npm start`.
  */
 
-// ! =========== NEW by Gai Deng ===================== 
+// ! =========== NEW by Gai Deng =====================
+// One overlay for View (read-only), Edit (add-item-style form), and Delete confirm.
+// `modalContent` is the white card: we toggle `.modal-content--edit` on it so Edit can be wider than View.
 const modal = document.getElementById("viewModal");
+const modalContent = document.getElementById("modalContent");
 const modalBody = document.getElementById("modalBody");
 const closeModalBtn = document.getElementById("closeModal");
 
@@ -83,6 +86,219 @@ function buildItemDateLine(item) {
     return "";
 }
 
+// ----- Edit modal: helpers (same field names as add-item.html so PUT matches POST) -----
+
+/** Safe text inside HTML (form values, textarea body, img alt/src). */
+function escapeHtml(text) {
+    if (text == null || text === "") return "";
+    return String(text)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+}
+
+/** `input type="date"` needs yyyy-mm-dd; SQLite sometimes returns a longer datetime string. */
+function dateInputValue(raw) {
+    if (!raw) return "";
+    const s = String(raw).trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+}
+
+/** Must stay in lockstep with the server CHECK constraint and add-item.html options. */
+const EDIT_CATEGORIES = [
+    "Electronics",
+    "Accessories",
+    "Clothing",
+    "Keys & ID",
+    "School Supplies",
+    "Bottles & containers",
+    "Sports & Fitness",
+    "Documents",
+    "Misc",
+];
+
+/** Builds the literal ` selected` attribute on `<option>` when that option matches the saved row. */
+function optionSelected(value, current) {
+    return value === current ? " selected" : "";
+}
+
+/**
+ * Edit popup: mirrors add-item.html fields so staff get the same layout and styles (add-item.css + .modal-content--edit).
+ * Filled from GET /api/admin/items/:id; submit uses multipart PUT to the same id.
+ *
+ * We build HTML as a string (no JSX), so every user-controlled value goes through `escapeHtml`
+ * to avoid breaking out of attributes or injecting tags. Image path is escaped too for the src attribute.
+ */
+function buildEditFormHtml(item) {
+    const dl = dateInputValue(item.date_lost);
+    const df = dateInputValue(item.date_found);
+    const catOptions =
+        '<option value="">Select category</option>' +
+        EDIT_CATEGORIES.map(
+            (c) =>
+                `<option value="${escapeHtml(c)}"${optionSelected(c, item.category)}>${escapeHtml(c)}</option>`,
+        ).join("");
+    const campusOptions =
+        '<option value="">Select campus</option>' +
+        ["Burnaby", "Downtown", "Aerospace"]
+            .map(
+                (c) =>
+                    `<option value="${escapeHtml(c)}"${optionSelected(c, item.campus)}>${escapeHtml(c)}</option>`,
+            )
+            .join("");
+    const st = item.status || "";
+    const statusOptions = [
+        `<option value="">Select status</option>`,
+        `<option value="lost"${optionSelected("lost", st)}>Lost</option>`,
+        `<option value="found"${optionSelected("found", st)}>Found</option>`,
+        `<option value="claimed"${optionSelected("claimed", st)}>Claimed</option>`,
+        `<option value="deleted"${optionSelected("deleted", st)}>Deleted</option>`,
+    ].join("");
+
+    const imgSection = item.image_path
+        ? `<div class="form-group full-width"><label>Current photo</label><img class="catalog-edit-current-img" src="${escapeHtml(item.image_path)}" alt="Current item image" /></div>`
+        : "";
+
+    return `
+        <div id="catalogEditError" class="catalog-edit-form-error" hidden></div>
+        <form id="catalogEditForm" class="add-item-form catalog-edit-form" data-item-id="${item.id}" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="edit_item_name">Item name</label>
+                <input type="text" id="edit_item_name" name="item_name" required value="${escapeHtml(item.item_name || "")}" placeholder="Example: Black wallet">
+            </div>
+            <div class="form-group">
+                <label for="edit_category">Category</label>
+                <select id="edit_category" name="category" required>${catOptions}</select>
+            </div>
+            <div class="form-group">
+                <label for="edit_campus">Campus</label>
+                <select id="edit_campus" name="campus" required>${campusOptions}</select>
+            </div>
+            <div class="form-group">
+                <label for="edit_status">Status</label>
+                <select id="edit_status" name="status" required>${statusOptions}</select>
+            </div>
+            <div class="form-group">
+                <label for="edit_location_details">Where found / reported <span class="optional">(optional)</span></label>
+                <input type="text" id="edit_location_details" name="location_details" value="${escapeHtml(item.location_details || "")}" placeholder="Example: Library, SE12, cafeteria">
+            </div>
+            <div class="form-group">
+                <label for="edit_stored_location">Stored location <span class="optional">(optional)</span></label>
+                <input type="text" id="edit_stored_location" name="stored_location" value="${escapeHtml(item.stored_location || "")}" placeholder="Example: Locker A1, shelf B2">
+            </div>
+            <div class="form-group">
+                <label for="edit_date_lost">Date lost <span class="optional">(optional)</span></label>
+                <input type="date" id="edit_date_lost" name="date_lost" value="${escapeHtml(dl)}">
+            </div>
+            <div class="form-group">
+                <label for="edit_date_found">Date found <span class="optional">(optional)</span></label>
+                <input type="date" id="edit_date_found" name="date_found" value="${escapeHtml(df)}">
+            </div>
+            <div class="form-group full-width">
+                <label for="edit_description">Description <span class="optional">(optional)</span></label>
+                <textarea id="edit_description" name="description" rows="4" placeholder="Colour, brand, serial number, or other details.">${escapeHtml(item.description || "")}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="edit_claimant_name">Claimant name <span class="optional">(optional)</span></label>
+                <input type="text" id="edit_claimant_name" name="claimant_name" value="${escapeHtml(item.claimant_name || "")}" placeholder="If claimed">
+            </div>
+            <div class="form-group">
+                <label for="edit_claimant_contact">Claimant contact <span class="optional">(optional)</span></label>
+                <input type="text" id="edit_claimant_contact" name="claimant_contact" value="${escapeHtml(item.claimant_contact || "")}" placeholder="Phone or email">
+            </div>
+            <div class="form-group full-width">
+                <label for="edit_notes">Staff notes <span class="optional">(optional)</span></label>
+                <textarea id="edit_notes" name="notes" rows="3" placeholder="Internal notes only.">${escapeHtml(item.notes || "")}</textarea>
+            </div>
+            ${imgSection}
+            <div class="form-group full-width">
+                <label for="edit_image">Replace photo <span class="optional">(optional, one image)</span></label>
+                <input type="file" id="edit_image" name="image" accept="image/*">
+            </div>
+            <div class="form-buttons full-width">
+                <button type="submit" class="save-btn">Save</button>
+                <button type="button" class="cancel-btn" id="catalogEditCancel">Cancel</button>
+            </div>
+        </form>`;
+}
+
+/**
+ * Save edits: browser sends multipart FormData exactly like “Add item”, but the verb is PUT on the row id.
+ * Leave the file input empty to keep the existing photo; if the server accepts a new file it replaces the old one.
+ */
+async function onCatalogEditSubmit(ev) {
+    ev.preventDefault();
+    const form = ev.currentTarget;
+    const errEl = document.getElementById("catalogEditError");
+    errEl.hidden = true;
+    const id = form.dataset.itemId;
+    const fd = new FormData(form);
+    try {
+        const res = await fetch(`/api/admin/items/${id}`, {
+            method: "PUT",
+            body: fd,
+            credentials: "include",
+        });
+        if (res.status === 401) {
+            window.location.href = "/index.html";
+            return;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            errEl.textContent = data.error || data.detail || "Save failed";
+            errEl.hidden = false;
+            return;
+        }
+        closeCatalogModal();
+        loadItems();
+    } catch {
+        errEl.textContent = "Network error — is the server running?";
+        errEl.hidden = false;
+    }
+}
+
+/**
+ * Opens the wide edit layout, pulls the latest row from the API, then drops in the form HTML.
+ * Cancel / Save are wired after insert because the nodes did not exist until then.
+ */
+async function openEditModal(id) {
+    modalContent.classList.add("modal-content--edit");
+    modal.classList.remove("hidden");
+    modalBody.innerHTML = "Loading...";
+    try {
+        const res = await fetch(`/api/admin/items/${id}`, {
+            credentials: "include",
+        });
+        if (res.status === 401) {
+            window.location.href = "/index.html";
+            return;
+        }
+        if (!res.ok) {
+            modalBody.innerHTML = "Failed to load item";
+            return;
+        }
+        const item = await res.json();
+        modalBody.innerHTML = buildEditFormHtml(item);
+        document.getElementById("catalogEditCancel").onclick = () =>
+            closeCatalogModal();
+        document
+            .getElementById("catalogEditForm")
+            .addEventListener("submit", onCatalogEditSubmit);
+    } catch {
+        modalBody.innerHTML = "Error loading item";
+    }
+}
+
+/** Hides the overlay and resets card width so the next open isn’t stuck in “edit” sizing. */
+function closeCatalogModal() {
+    modal.classList.add("hidden");
+    modalContent.classList.remove("modal-content--edit");
+}
+
 /**
  * Builds the table body HTML from the array of item objects returned by the API.
  * Uses template literals (`backticks`) to inject values — same idea as Python f-strings.
@@ -97,6 +313,7 @@ function renderRows(items) {
 
         const showDelete = item.status !== "deleted";
 
+        // View and Edit both use `data-id` with GET /api/admin/items/:id; catalog.js decides read-only vs form.
         return `
             <tr>
                 <td>${item.item_name ?? "-"}</td>
@@ -106,7 +323,7 @@ function renderRows(items) {
                 <td><span class="status ${item.status}">${toTitleCase(item.status)}</span></td>
                 <td>
                     <a href="#" class="action-btn view-btn" data-id="${item.id}">View</a>
-                    <a href="#" class="action-btn edit-btn">Edit</a>
+                    <a href="#" class="action-btn edit-btn" data-id="${item.id}">Edit</a>
 
                     ${showDelete ? `
                         <a href="#" class="action-btn delete-btn" data-id="${item.id}" data-name="${item.item_name}">
@@ -223,20 +440,20 @@ logoutBtn.addEventListener("click", async (event) => {
 // modules
 // close button
 closeModalBtn.onclick = () => {
-    modal.classList.add("hidden");
+    closeCatalogModal();
 };
 
 // click outside
 modal.onclick = (e) => {
     if (e.target === modal) {
-        modal.classList.add("hidden");
+        closeCatalogModal();
     }
 };
 
-// Same as many desktop apps: Escape closes the popup if it’s open (view or delete confirm).
+// Same as many desktop apps: Escape closes whatever is in the modal (view, edit form, or delete confirm).
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !modal.classList.contains("hidden")) {
-        modal.classList.add("hidden");
+        closeCatalogModal();
     }
 });
 // ! =================== END  ========================
@@ -245,8 +462,10 @@ document.addEventListener("keydown", (e) => {
 loadItems();
 
 
-// ! =========== NEW by Gai Deng ===================== 
+// ! =========== NEW by Gai Deng =====================
+// Read-only detail: narrow card, no form. Strip edit width in case the user opened Edit right before this.
 window.openModal = async function (id) {
+    modalContent.classList.remove("modal-content--edit");
     modal.classList.remove("hidden");
     modalBody.innerHTML = "Loading...";
     
@@ -262,26 +481,28 @@ window.openModal = async function (id) {
         
         const item = await res.json();
 
+        // Read-only strings: escapeHtml so odd characters in item names or notes can’t break the markup.
         // Detail panel for “View”: matches the DB fields we care about on the floor —
         // where it was lost/found vs where it’s stored, reporting + event dates, then claimant info above staff notes.
         modalBody.innerHTML = `
-        <h2>${item.item_name}</h2>
+        <h2>${escapeHtml(item.item_name)}</h2>
         
         ${item.image_path ? `
-            <img src="${item.image_path}"
+            <img src="${escapeHtml(item.image_path)}"
             style="width:100%;border-radius:8px;margin:10px 0;" />
             ` : ""}
             
-            <p><strong>Category:</strong> ${item.category}</p>
-            <p><strong>Campus:</strong> ${item.campus}</p>
-            <p><strong>Status:</strong> ${item.status}</p>
-            <p><strong>Lost/Found Location:</strong> ${item.location_details || "-"}</p>
-            <p><strong>Storage Location:</strong> ${item.stored_location || "-"}</p>
+            <p><strong>Category:</strong> ${escapeHtml(item.category)}</p>
+            <p><strong>Campus:</strong> ${escapeHtml(item.campus)}</p>
+            <p><strong>Status:</strong> ${escapeHtml(item.status)}</p>
+            <p><strong>Description:</strong> ${escapeHtml(item.description) || "-"}</p>
+            <p><strong>Lost/Found Location:</strong> ${escapeHtml(item.location_details) || "-"}</p>
+            <p><strong>Storage Location:</strong> ${escapeHtml(item.stored_location) || "-"}</p>
             <p><strong>Date Reported:</strong> ${formatDate(item.date_reported)}</p>
             ${buildItemDateLine(item)}
-            <p><strong>Claimant Name:</strong> ${item.claimant_name || "-"}</p>
-            <p><strong>Claimant Contact:</strong> ${item.claimant_contact || "-"}</p>
-            <p><strong>Notes:</strong> ${item.notes || "-"}</p>
+            <p><strong>Claimant Name:</strong> ${escapeHtml(item.claimant_name) || "-"}</p>
+            <p><strong>Claimant Contact:</strong> ${escapeHtml(item.claimant_contact) || "-"}</p>
+            <p><strong>Notes:</strong> ${escapeHtml(item.notes) || "-"}</p>
             `;
             
         } catch (err) {
@@ -289,15 +510,19 @@ window.openModal = async function (id) {
         }
     };
     
-    // 2.
+    // One listener on the table body: branch on which action link was clicked (View vs Edit).
     catalogBody.addEventListener("click", (e) => {
-        const btn = e.target.closest(".view-btn");
-        if (!btn) return;
-
-        e.preventDefault();
-
-        const id = btn.dataset.id;
-        window.openModal(id);
+        const viewBtn = e.target.closest(".view-btn");
+        if (viewBtn) {
+            e.preventDefault();
+            window.openModal(viewBtn.dataset.id);
+            return;
+        }
+        const editBtn = e.target.closest(".edit-btn");
+        if (editBtn) {
+            e.preventDefault();
+            openEditModal(editBtn.dataset.id);
+        }
 });
     
     // ! =================== END  ========================
@@ -319,7 +544,9 @@ catalogBody.addEventListener("click", (e) => {
 
 
 // ! === DELETE state =====
+/** Narrow centred confirm; not the wide edit layout. */
 function openDeleteModal(id, name) {
+    modalContent.classList.remove("modal-content--edit");
     modal.classList.remove("hidden");
 
     modalBody.innerHTML = `
@@ -337,7 +564,7 @@ function openDeleteModal(id, name) {
     `;
 
     document.getElementById("cancelDelete").onclick = () => {
-        modal.classList.add("hidden");
+        closeCatalogModal();
     };
 
     document.getElementById("confirmDelete").onclick = async () => {
@@ -352,7 +579,7 @@ function openDeleteModal(id, name) {
                 return;
             }
 
-            modal.classList.add("hidden");
+            closeCatalogModal();
 
             // refresh table
             loadItems();
