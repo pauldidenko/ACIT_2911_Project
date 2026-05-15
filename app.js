@@ -383,8 +383,15 @@ async function listAdminItems(req, res) {
     sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
 
   // Build dynamic WHERE clause only for provided filters.
-  const where = [];
+  // const where = [];
+  // const params = [];
+
+
+  // Build dynamic WHERE clause only for provided filters.
+  // Default: only show active catalog items (lost + found)
+  const where = ["status IN ('lost', 'found')"];
   const params = [];
+
 
   if (search) {
     where.push(
@@ -397,10 +404,16 @@ async function listAdminItems(req, res) {
     where.push("category = ?");
     params.push(category);
   }
+
+  // ! new
+  // If a specific status filter is selected,
+  // override the default lost/found filter.
   if (status) {
+    where.length = 0;
     where.push("status = ?");
     params.push(status);
   }
+  // ! END
   if (campus) {
     where.push("campus = ?");
     params.push(campus);
