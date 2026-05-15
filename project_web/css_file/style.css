@@ -55,6 +55,30 @@
         font-size: 1.0rem;
     }
 
+    .nav-list {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .nav-list a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  .nav-list a i,
+  .nav-list a .bi {
+    display: block;
+    font-size: 1.1rem;
+    margin: 0;
+  }
+
 }
 
 
