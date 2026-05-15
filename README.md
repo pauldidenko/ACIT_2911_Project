@@ -6,7 +6,7 @@
 | ---------- | --------- |
 | Troy       | A01479290 |
 | Ariana     | A01497071 |
-| Olena      | A0        |
+| Olena      | A01510135 |
 | Gai        | A0        |
 | Paul       | A0        |
 | Daniel     | A01223223 |
