@@ -424,6 +424,17 @@
 }
 
 /* ! =============== END ===================== */
+
+/* * ==== added ==== */
+.lost-table td:last-child {
+    white-space: nowrap;
+    min-width: 220px;
+}
+.action-btn {
+    display: inline-block;
+    margin: 3px 5px;
+}
+
 @media screen and (max-width: 842px) {
     .catalog-controls {
         grid-template-columns: 1fr;

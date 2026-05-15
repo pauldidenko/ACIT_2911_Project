@@ -634,6 +634,54 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
 });
 // ! ============ END ====================
 
+
+// ! =========== DELETE ITEM ROUTE by Gai Deng =====================
+
+app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    // Check if item exists first
+    const rows = await allAsync(
+      `
+      SELECT id, status
+      FROM items
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [id],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    // Reset item status to deleted
+    await runAsync(
+      `
+      UPDATE items
+      SET status = 'deleted'
+      WHERE id = ?
+      `,
+      [id],
+    );
+
+    return res.json({
+      success: true,
+      message: "Item deleted successfully",
+    });
+  } catch (error) {
+    console.error("Failed to delete item:", error);
+
+    return res.status(500).json({
+      error: "Failed to delete item",
+    });
+  }
+});
+
+// ! ================= END DELETE ROUTE ============================
+
+
 // Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
 

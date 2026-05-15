@@ -66,19 +66,30 @@ function renderRows(items) {
         return;
     }
 
-    catalogBody.innerHTML = items.map((item) => `
-                <tr>
-                    <td>${item.item_name ?? "-"}</td>
-                    <td>${item.category ?? "-"}</td>
-                    <td>${formatDate(item.date_reported)}</td>
-                    <td>${item.campus ?? "-"}</td>
-                    <td><span class="status ${item.status}">${toTitleCase(item.status)}</span></td>
-                    <td>
+    catalogBody.innerHTML = items.map((item) => {
+
+        const showDelete = item.status !== "deleted";
+
+        return `
+            <tr>
+                <td>${item.item_name ?? "-"}</td>
+                <td>${item.category ?? "-"}</td>
+                <td>${formatDate(item.date_reported)}</td>
+                <td>${item.campus ?? "-"}</td>
+                <td><span class="status ${item.status}">${toTitleCase(item.status)}</span></td>
+                <td>
                     <a href="#" class="action-btn view-btn" data-id="${item.id}">View</a>
-                        <a href="#" class="action-btn edit-btn">Edit</a>
-                    </td>
-                </tr>
-            `).join("");
+                    <a href="#" class="action-btn edit-btn">Edit</a>
+
+                    ${showDelete ? `
+                        <a href="#" class="action-btn delete-btn" data-id="${item.id}" data-name="${item.item_name}">
+                            Delete
+                        </a>
+                    ` : ""}
+                </td>
+            </tr>
+        `;
+    }).join("");
 }
 
 /** Updates the “Page X of Y” text and enables/disables Prev/Next buttons. */
@@ -250,3 +261,66 @@ window.openModal = async function (id) {
 });
     
     // ! =================== END  ========================
+
+// Delete handler 
+
+catalogBody.addEventListener("click", (e) => {
+    const btn = e.target.closest(".delete-btn");
+    if (!btn) return;
+
+    e.preventDefault();
+
+    const id = btn.dataset.id;
+    const name = btn.dataset.name;
+
+    openDeleteModal(id, name);
+});
+
+
+
+// ! === DELETE state =====
+function openDeleteModal(id, name) {
+    modal.classList.remove("hidden");
+
+    modalBody.innerHTML = `
+        <div style="text-align:center">
+            <h3 style="margin-bottom:10px;">Confirm Delete</h3>
+            <p style="margin-bottom:20px;">
+                Are you sure you want to delete <strong>${name}</strong>?
+            </p>
+
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button id="cancelDelete" class="action-btn view-btn">Cancel</button>
+                <button id="confirmDelete" class="action-btn delete-btn">Delete</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("cancelDelete").onclick = () => {
+        modal.classList.add("hidden");
+    };
+
+    document.getElementById("confirmDelete").onclick = async () => {
+        try {
+            const res = await fetch(`/api/admin/items/${id}`, {
+                method: "DELETE",
+                credentials: "include"
+            });
+
+            if (!res.ok) {
+                alert("Failed to delete item");
+                return;
+            }
+
+            modal.classList.add("hidden");
+
+            // refresh table
+            loadItems();
+
+        } catch (err) {
+            alert("Error deleting item");
+        }
+    };
+}
+
+// ! ==== END =======
