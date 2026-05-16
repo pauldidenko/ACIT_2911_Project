@@ -116,6 +116,7 @@ async function loadPublicRecentTables() {
 
 /** Session + login UI (login.js) runs beside public tables so first paint stays consistent when possible. */
 async function initIndexPage() {
+    // If login.js failed to load, we still show public tables — just skip auth wiring instead of throwing.
     const auth =
         typeof AppAuth !== "undefined" ? AppAuth.initHomePageAuth() : Promise.resolve();
     await Promise.all([auth, loadPublicRecentTables()]);

@@ -100,6 +100,7 @@ async function initAccountPage() {
         usernameEl.textContent = data.username;
     }
 
+    // Shared logout handler (POST + redirect) lives in login.js so catalog/account behave identically.
     if (typeof AppAuth !== "undefined") {
         AppAuth.wireStandardLogoutById();
     }

@@ -425,7 +425,7 @@ resetFiltersBtn.addEventListener("click", () => {
     loadItems();
 });
 
-// Navbar logout — shared with account / add-item (see login.js).
+// Logout in the header: same POST + home redirect as account (implemented once in login.js).
 if (typeof AppAuth !== "undefined") {
     AppAuth.wireStandardLogoutById();
 }

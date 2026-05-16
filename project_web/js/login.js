@@ -7,12 +7,16 @@
  * - **index.html only** — the login overlay, `#sessionNavBtn` toggle, and showing/hiding Catalog + Account links.
  *
  * Other pages load this file *before* their page script so `window.AppAuth` is ready (see script order in each HTML).
+ *
+ * Why an IIFE: we only need one `AppAuth` bag on `window`; wrapping avoids leaking temp names into the global scope.
  */
 (function attachAppAuth(global) {
+    /** After logout we usually send people to the public home (relative URL works on any host/port). */
     const DEFAULT_HOME = "/index.html";
 
     /**
-     * Clears the server session cookie. Safe to call even if the network fails — callers still redirect if they want.
+     * Tells Express to clear the admin session cookie. We never throw — if the tab is offline or the
+     * server hiccups, the UI still moves on (e.g. redirect) so the user isn’t stuck staring at a spinner.
      */
     async function postLogout() {
         try {
@@ -26,8 +30,9 @@
     }
 
     /**
-     * Lightweight “who am I?” check. Returns `{ authenticated: boolean, username?: string }` on success,
-     * or `{ authenticated: false }` if the request blows up (offline server, etc.).
+     * Lightweight “who am I?” for the browser cookie. Same contract as the old inline `refreshSession` on home:
+     * returns whatever JSON the server sends (typically `authenticated` + optional `username`).
+     * If the network dies or the response isn’t JSON, we pretend you’re logged out — safest default for guards.
      */
     async function fetchSession() {
         try {
@@ -41,7 +46,8 @@
     }
 
     /**
-     * Standard navbar logout (`#logoutBtn` on catalog / account / add-item): destroy session then go home.
+     * Generic “log out from this link” helper: any element (usually `<a href="#">`) gets one click handler.
+     * Catalog / account use the same pattern: POST first, then hard navigation so the next page sees a clean guest state.
      */
     function wireLogoutButton(element, redirectUrl = DEFAULT_HOME) {
         if (!element) return;
@@ -52,6 +58,10 @@
         });
     }
 
+    /**
+     * Convenience for pages that use the shared navbar id `#logoutBtn` (catalog, account, …).
+     * Same redirect as `wireLogoutButton`; only difference is we look the element up by id for you.
+     */
     function wireStandardLogoutById(
         buttonId = "logoutBtn",
         redirectUrl = DEFAULT_HOME,
@@ -60,8 +70,11 @@
     }
 
     /**
-     * add-item.html resolves the real Express origin for Live Server; logout + redirect must use the same helper.
-     * Pass async functions that return absolute or same-origin URLs.
+     * add-item is special: the HTML might be served from Live Server while the API lives on another origin.
+     * Those pages already have an async `apiUrl()` — we reuse it so logout hits the *same* Express instance as the form.
+     *
+     * `getLogoutUrl` / `getRedirectUrl` can return a relative path (same tab as Express) or a full `http://…` URL.
+     * Full URLs need explicit `cors` mode with credentials so the browser doesn’t block the sign-out request.
      */
     function wireLogoutWithAsyncUrls(getLogoutUrl, getRedirectUrl, buttonId = "logoutBtn") {
         const element = document.getElementById(buttonId);
@@ -83,16 +96,22 @@
             try {
                 global.location.href = await getRedirectUrl();
             } catch (_err2) {
+                // If `apiUrl` blew up, still send the user somewhere sensible instead of leaving them on a half-broken page.
                 global.location.href = DEFAULT_HOME;
             }
         });
     }
 
-    // ----- index.html: modal + session nav (elements missing on other pages → everything no-ops safely) -----
+    // ----- index.html only: modal + single “Login / Logout” nav item -----
+    // None of these ids exist on catalog/account — every helper below checks for null and bails quietly.
 
+    /** Stops us from attaching duplicate listeners if `initHomePageAuth` were ever called twice (defensive). */
     let homeLoginWired = false;
+
+    /** In-memory mirror of the cookie session for the home header (drives button label + which click path runs). */
     let isAuthenticated = false;
 
+    // Lazy `getElementById` calls: this file loads on every page, but only index has the overlay — no stale null refs at parse time.
     const overlayEl = () => document.getElementById("loginOverlay");
     const loginCardEl = () => document.getElementById("loginCard");
     const formEl = () => document.getElementById("adminLoginForm");
@@ -104,6 +123,7 @@
     const navQuickCatalog = () => document.getElementById("navQuickCatalog");
     const navQuickAccount = () => document.getElementById("navQuickAccount");
 
+    /** Swaps the icon + word on `#sessionNavBtn` so one physical link reads “Login” or “Logout” depending on state. */
     function renderSessionButton() {
         const btn = sessionNavBtn();
         if (!btn) return;
@@ -117,7 +137,8 @@
     }
 
     /**
-     * After session refresh or login/logout: show or hide admin-only nav targets (same rules as before the split).
+     * Single switch for “guest vs admin” chrome on the home page: header Catalog/Account rows + matching FAB links.
+     * Guests should never see admin URLs they can’t use; logged-in staff get the same links in two places (nav + float).
      */
     function setAuthenticated(value) {
         isAuthenticated = Boolean(value);
@@ -133,6 +154,7 @@
         if (qAcc) qAcc.hidden = !showAdminNav;
     }
 
+    /** Opens the dimmed full-screen layer; login.css keys off `.is-open`. Clears any previous error text. */
     function openLoginOverlay() {
         const overlay = overlayEl();
         if (!overlay) return;
@@ -146,6 +168,7 @@
         }
     }
 
+    /** Hides overlay and clears the red inline error strip (used after success, cancel, or backdrop click). */
     function closeLoginOverlay() {
         const overlay = overlayEl();
         if (!overlay) return;
@@ -155,17 +178,23 @@
         if (err) err.textContent = "";
     }
 
+    /** On first paint (and whenever you call `refreshHomeSession` later): ask the server if the cookie is still valid. */
     async function refreshHomeSession() {
         const data = await fetchSession();
         setAuthenticated(Boolean(data.authenticated));
     }
 
+    /**
+     * Wires every home-only interaction once: session button, overlay dismiss paths, and the admin login form.
+     * Intentionally not registered on other routes — keeps catalog/account scripts free of dead listeners.
+     */
     function wireHomeLoginAndNav() {
         const form = formEl();
         const navBtn = sessionNavBtn();
         if (!navBtn || !form || homeLoginWired) return;
         homeLoginWired = true;
 
+        // One button, two modes: logged in → sign out and stay on the marketing home; logged out → show the modal.
         navBtn.addEventListener("click", async (event) => {
             event.preventDefault();
             if (isAuthenticated) {
@@ -180,6 +209,7 @@
 
         const closeBtn = closeLoginBtn();
         if (closeBtn) {
+            // Explicit “Cancel” — same outcome as clicking the dimmed backdrop.
             closeBtn.addEventListener("click", () => {
                 closeLoginOverlay();
                 form.reset();
@@ -188,6 +218,7 @@
 
         const overlay = overlayEl();
         if (overlay) {
+            // Click the dimmed area outside the white card = “same as cancel” for people who miss the button.
             overlay.addEventListener("click", (event) => {
                 if (event.target === overlay) {
                     closeLoginOverlay();
@@ -198,11 +229,13 @@
 
         const card = loginCardEl();
         if (card) {
+            // Otherwise a click on the form bubbles to the overlay handler and instantly closes the modal — annoying.
             card.addEventListener("click", (event) => {
                 event.stopPropagation();
             });
         }
 
+        // Match desktop expectations: Escape closes the modal without submitting.
         document.addEventListener("keydown", (event) => {
             const ov = overlayEl();
             if (
@@ -215,6 +248,7 @@
             }
         });
 
+        // Real login: JSON body (not FormData) because the Express route expects `{ username, password }`.
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
             const err = errorEl();
@@ -249,8 +283,8 @@
     }
 
     /**
-     * Home entry: sync session with server, close any stuck overlay, attach one-time listeners.
-     * `index.js` awaits this in parallel with loading the public tables.
+     * What `index.js` calls on load: figure out guest vs admin, make sure we’re not showing a half-open overlay
+     * from a previous navigation, then hook up the modal once. Runs in parallel with the public “recent items” fetch.
      */
     async function initHomePageAuth() {
         await refreshHomeSession();
@@ -258,6 +292,7 @@
         wireHomeLoginAndNav();
     }
 
+    // Public bag: other scripts only rely on names documented in the file header — keep this list stable for teammates.
     global.AppAuth = {
         postLogout,
         fetchSession,
@@ -265,7 +300,7 @@
         wireStandardLogoutById,
         wireLogoutWithAsyncUrls,
         initHomePageAuth,
-        /** Used only on index if something else needs to re-pull session later. */
+        /** Rare follow-up on home if you add a “refresh session” control later; same as first-load session pull today. */
         refreshHomeSession,
     };
 })(typeof window !== "undefined" ? window : globalThis);

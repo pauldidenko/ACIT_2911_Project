@@ -122,7 +122,7 @@ async function apiUrl(path) {
     return base ? `${base}${p}` : p;
 }
 
-// Navbar logout uses the same resolved API origin as the form (Live Server / meta tag). See login.js.
+// Logout must use `apiUrl()` so Live Server users hit the same Express host as the form POST (login.js helper).
 if (typeof AppAuth !== "undefined") {
     AppAuth.wireLogoutWithAsyncUrls(
         () => apiUrl("/api/auth/logout"),
