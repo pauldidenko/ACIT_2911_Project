@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see index.js + login.css). -->
+    <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see login.js + login.css). -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true" aria-modal="true" role="dialog">
         <div class="login-card" id="loginCard">
             <h2>Login</h2>
@@ -33,7 +33,7 @@
         </div>
     </div>
     <!-- Navigation: Catalog + Account start with the HTML `hidden` attribute so guests only see Home + Login;
-         index.js removes `hidden` after a successful /api/auth/session when someone is logged in. -->
+         index.js + login.js remove `hidden` after a successful /api/auth/session when someone is logged in. -->
     <header class="navbar">
         <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
         <nav class="nav-links">
@@ -106,7 +106,7 @@
         <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
         <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
         <a href="catalog.html" class="catalog-btn" id="navQuickCatalog" hidden><i class="bi bi-box-seam-fill"></i></a>
-        <!-- Same visibility rules as header: hidden until logged in (see index.js setAuthenticated). -->
+        <!-- Same visibility rules as header: hidden until logged in (see login.js setAuthenticated). -->
         <a href="account.html" class="account1-btn" id="navQuickAccount" hidden><i class="bi bi-person-fill"></i></a>
     </div>
     
@@ -131,7 +131,9 @@
             <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
     </footer>
 
-    <!-- Home page logic: login modal, nav visibility, and public table fetch — all in ./js/index.js -->
+    <!-- Shared session helpers + home login modal: must load before index.js (uses AppAuth). -->
+    <script src="./js/login.js" defer></script>
+    <!-- Home: public tables + init that calls AppAuth.initHomePageAuth() -->
     <script src="./js/index.js" defer></script>
 </body>
 

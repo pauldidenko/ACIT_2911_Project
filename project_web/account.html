@@ -2,7 +2,7 @@
 <!--
   account.html — Admin-facing account summary (quick links, live stats).
 
-  Security: ./js/account.js runs on defer. It calls GET /api/auth/session first; if not authenticated,
+  Security: ./js/login.js then ./js/account.js (defer). account.js calls GET /api/auth/session first; if not authenticated,
   the browser is sent to index.html before sensitive UI is relied on.
 
   Stats row (.stats-grid): the four <p> elements use ids statTotalItems, statTotalLost, statTotalFound,
@@ -111,7 +111,8 @@
         <div class="container"></div>
     </main>
 
-    <!-- Session guard, logout, and dashboard stats: ./js/account.js (defer — runs after DOM is parsed). -->
+    <!-- Session guard + stats: login.js (AppAuth) must load first so logout wiring exists. -->
+    <script src="./js/login.js" defer></script>
     <script src="./js/account.js" defer></script>
 </body>
 <!-- Footer -->

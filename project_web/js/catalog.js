@@ -10,6 +10,7 @@
  * 3. renderRows() fills the HTML table with the JSON rows returned.
  *
  * API: GET `/api/admin/items` with query params (see app.js `listAdminItems`). Same origin as catalog page when using `npm start`.
+ * Navbar logout is wired in **login.js** (`AppAuth.wireStandardLogoutById`); catalog.js only assumes `#logoutBtn` exists in the HTML.
  */
 
 // ! =========== NEW by Gai Deng =====================
@@ -42,7 +43,6 @@ const catalogBody = document.getElementById("catalogBody");
 const prevPageBtn = document.getElementById("prevPageBtn");
 const nextPageBtn = document.getElementById("nextPageBtn");
 const pageInfo = document.getElementById("pageInfo");
-const logoutBtn = document.getElementById("logoutBtn");
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 
 /** Turn a date string from the server into a short local date for display (e.g. US locale). */
@@ -425,16 +425,10 @@ resetFiltersBtn.addEventListener("click", () => {
     loadItems();
 });
 
-// Tell server to destroy session cookie, then leave catalog for login/home.
-logoutBtn.addEventListener("click", async (event) => {
-    event.preventDefault();
-    try {
-        await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-    } catch (_error) {
-        // ignore
-    }
-    window.location.href = "/index.html";
-});
+// Navbar logout — shared with account / add-item (see login.js).
+if (typeof AppAuth !== "undefined") {
+    AppAuth.wireStandardLogoutById();
+}
 
 // ! =========== NEW by Gai Deng ===================== 
 // modules

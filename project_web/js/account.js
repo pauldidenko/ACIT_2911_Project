@@ -11,12 +11,13 @@
  * Flow:
  *   1) Fetch session with credentials: "include" (browser sends the same cookie as catalog).
  *   2) If not authenticated → window.location to index.html (stops the rest of the script).
- *   3) If authenticated → show who is logged in (#accountUsername) and wire Logout.
+ *   3) If authenticated → show who is logged in (#accountUsername); **logout** is wired in login.js (`AppAuth`).
  *   4) loadAccountStats() → GET /api/admin/stats with the same session cookie. Populates the four
  *      stat paragraphs in account.html (#statTotalItems, …). If the stats call returns 401 (session
  *      expired or tampered), redirect to index.html like an unauthenticated visitor.
  *
- * Related files: app.js (/api/auth/session, /api/auth/logout, /api/admin/stats), account.html.
+ * Related files: app.js (/api/auth/session, /api/auth/logout, /api/admin/stats), account.html,
+ * login.js (`AppAuth` — wires `#logoutBtn` the same way as catalog / add-item).
  */
 
 /**
@@ -99,20 +100,8 @@ async function initAccountPage() {
         usernameEl.textContent = data.username;
     }
 
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", async (event) => {
-            event.preventDefault();
-            try {
-                await fetch("/api/auth/logout", {
-                    method: "POST",
-                    credentials: "include",
-                });
-            } catch (_error) {
-                // Still leave for home — user intent is clearly “sign out”.
-            }
-            window.location.href = "/index.html";
-        });
+    if (typeof AppAuth !== "undefined") {
+        AppAuth.wireStandardLogoutById();
     }
 
     // Stats require an admin session; server enforces it. Runs after username + logout wiring.

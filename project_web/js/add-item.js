@@ -8,10 +8,10 @@
  *   probes GET `/api/auth/session`, uses `<meta name="app-api-origin">`, or scans common ports.
  * - When you open the page through Express (`npm start`), the server injects `app-api-origin` and same-origin fetch works.
  * - Success → banner + redirect to `catalog.html`; errors → `#pageBanner` message at top.
+ * - Logout in the header is wired by **login.js** (`AppAuth.wireLogoutWithAsyncUrls` with this file’s `apiUrl()`).
  */
 const form = document.getElementById("addItemForm");
 const pageBanner = document.getElementById("pageBanner");
-const logoutBtn = document.getElementById("logoutBtn");
 
 /** Cached API base: "" = same origin, or full origin like http://localhost:3000 */
 let cachedApiBase;
@@ -122,6 +122,14 @@ async function apiUrl(path) {
     return base ? `${base}${p}` : p;
 }
 
+// Navbar logout uses the same resolved API origin as the form (Live Server / meta tag). See login.js.
+if (typeof AppAuth !== "undefined") {
+    AppAuth.wireLogoutWithAsyncUrls(
+        () => apiUrl("/api/auth/logout"),
+        () => apiUrl("/index.html"),
+    );
+}
+
 function scrollToTopAndShowBanner() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -210,17 +218,4 @@ form.addEventListener("submit", async (event) => {
             "Network error — run npm start and open this site from that URL.",
         );
     }
-});
-
-logoutBtn.addEventListener("click", async (event) => {
-    event.preventDefault();
-    try {
-        await fetch(await apiUrl("/api/auth/logout"), {
-            method: "POST",
-            credentials: "include",
-        });
-    } catch (_e) {
-        /* ignore */
-    }
-    window.location.href = await apiUrl("/index.html");
 });
