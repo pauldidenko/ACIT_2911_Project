@@ -93,7 +93,7 @@ describe("POST /api/admin/items", () => {
 describe("GET /api/public/items/recent (home preview)", () => {
   /*
    * Public routes used by project_web/js/index.js on the home page.
-   * Anyone can call them — assertions make sure we never accidentally expose admin-only fields
+   * Anyone can call them - assertions make sure we never accidentally expose admin-only fields
    * and that pagination-by-limit stays capped at 3 for both lost and found previews.
    */
   it("returns recent lost items without auth (200, items array, max 3)", async () => {

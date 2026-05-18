@@ -1,5 +1,5 @@
 /**
- * add-item.js — behaviour for `add-item.html` (staff “create catalog item” form).
+ * add-item.js - behaviour for `add-item.html` (staff “create catalog item” form).
  *
  * Teammates:
  * - Form submits via `fetch` to POST `/api/admin/items` with `FormData` (multipart: fields + optional file field `image`).
@@ -54,7 +54,7 @@ async function resolveApiBase() {
 
     const { protocol, hostname } = window.location;
 
-    // Server-injected meta (see app.js GET /add-item.html) — same origin, use relative API URLs.
+    // Server-injected meta (see app.js GET /add-item.html) - same origin, use relative API URLs.
     if (protocol.startsWith("http") && fromMeta && fromMeta === window.location.origin) {
         cachedApiBase = "";
         return cachedApiBase;
@@ -164,7 +164,7 @@ function humanizeErrorBody(raw, status) {
         return inner;
     }
     if (/^\s*</.test(raw)) {
-        return "Server returned HTML instead of JSON — is Express running?";
+        return "Server returned HTML instead of JSON - is Express running?";
     }
     return raw.trim().slice(0, 400);
 }
@@ -215,7 +215,7 @@ form.addEventListener("submit", async (event) => {
     } catch (_err) {
         showBanner(
             "error",
-            "Network error — run npm start and open this site from that URL.",
+            "Network error - run npm start and open this site from that URL.",
         );
     }
 });

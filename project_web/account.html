@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <!--
-  account.html — Admin-facing account summary (quick links, live stats).
+  account.html - Admin-facing account summary (quick links, live stats).
 
   Security: ./js/login.js then ./js/account.js (defer). account.js calls GET /api/auth/session first; if not authenticated,
   the browser is sent to index.html before sensitive UI is relied on.
 
   Stats row (.stats-grid): the four <p> elements use ids statTotalItems, statTotalLost, statTotalFound,
-  statTotalClaimed. account.js replaces the initial "—" with numbers from GET /api/admin/stats after
-  login is confirmed. That endpoint is admin-only; deleted items are excluded from total items — see
+  statTotalClaimed. account.js replaces the initial "-" with numbers from GET /api/admin/stats after
+  login is confirmed. That endpoint is admin-only; deleted items are excluded from total items - see
   app.js comments on /api/admin/stats for exact counting rules.
 -->
 <html lang="en">
@@ -70,13 +70,13 @@
                 </div>
             </div>
 
-            <div class="account-card">
-                <h2>Quick Actions</h2>
-
-                <div class="quick-actions">
-                    <a href="catalog.html" class="account-btn">View Catalog</a>
-                    <a href="add-item.html" class="account-btn">+ Add Item</a>
-                    <a href="index.html" class="account-btn secondary-btn">Back to Home</a>
+            <!-- MFA controls: account.js enables Set up OR Disable (not both). Setup opens #mfaSetupOverlay below. -->
+            <div class="account-card mfa-card">
+                <h2>Multi-factor authentication</h2>
+                <p class="mfa-status-text" id="mfaStatusText">Checking MFA status…</p>
+                <div class="mfa-actions">
+                    <button type="button" class="account-btn" id="mfaSetupBtn" disabled>Set up MFA</button>
+                    <button type="button" class="account-btn secondary-btn" id="mfaDisableBtn" disabled>Disable MFA</button>
                 </div>
             </div>
 
@@ -87,24 +87,46 @@
             <div class="stat-card">
                 <h3>Total items</h3>
                 <!-- Non-deleted workflow rows only (lost + found + claimed); see backend route. -->
-                <p id="statTotalItems">—</p>
+                <p id="statTotalItems">-</p>
             </div>
 
             <div class="stat-card">
                 <h3>Total lost</h3>
-                <p id="statTotalLost">—</p>
+                <p id="statTotalLost">-</p>
             </div>
 
             <div class="stat-card">
                 <h3>Total found</h3>
-                <p id="statTotalFound">—</p>
+                <p id="statTotalFound">-</p>
             </div>
 
             <div class="stat-card">
                 <h3>Total claimed</h3>
-                <p id="statTotalClaimed">—</p>
+                <p id="statTotalClaimed">-</p>
             </div>
         </div>
+
+    <!-- MFA setup: scan QR, enter live 6-digit code, Enable MFA → verify then save secret (account.js). -->
+    <div id="mfaSetupOverlay" class="mfa-overlay" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="mfa-modal">
+            <button type="button" class="mfa-close-btn" id="mfaSetupCloseBtn" aria-label="Close">&times;</button>
+            <h2>Set up authenticator</h2>
+            <p class="mfa-modal-hint">Scan the QR code with Google Authenticator, Microsoft Authenticator, or a similar app. Codes refresh every 30 seconds.</p>
+            <div class="mfa-qr-wrap">
+                <img id="mfaQrImage" alt="QR code for authenticator setup" hidden />
+            </div>
+            <p class="mfa-manual-key"><span>Manual key:</span> <code id="mfaManualKey"></code></p>
+            <label class="mfa-code-label">
+                Enter 6-digit code
+                <input id="mfaSetupCode" type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000" autocomplete="one-time-code" />
+            </label>
+            <p id="mfaSetupError" class="mfa-error"></p>
+            <div class="mfa-modal-actions">
+                <button type="button" class="account-btn" id="mfaSetupConfirmBtn">Enable MFA</button>
+                <button type="button" class="account-btn secondary-btn" id="mfaSetupCancelBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     </section>
     <main class="card">

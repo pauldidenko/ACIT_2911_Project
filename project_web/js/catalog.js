@@ -1,5 +1,5 @@
 /**
- * catalog.js — Lost & Found items catalog page logic.
+ * catalog.js - Lost & Found items catalog page logic.
  *
  * This file runs after catalog.html has loaded (script tag is at the bottom of the page),
  * so getElementById can safely find every element.
@@ -62,7 +62,7 @@ function toTitleCase(value) {
 /**
  * One line for the View modal: “Date lost” vs “Date found”.
  * In the real data, found items often still have a date_lost filled in, so we can’t
- * always prefer date_lost first — we pick the single date that makes sense, and if
+ * always prefer date_lost first - we pick the single date that makes sense, and if
  * both exist we let the row’s status decide (found → show date found, lost → date lost).
  */
 function buildItemDateLine(item) {
@@ -256,7 +256,7 @@ async function onCatalogEditSubmit(ev) {
         closeCatalogModal();
         loadItems();
     } catch {
-        errEl.textContent = "Network error — is the server running?";
+        errEl.textContent = "Network error - is the server running?";
         errEl.hidden = false;
     }
 }
@@ -301,7 +301,7 @@ function closeCatalogModal() {
 
 /**
  * Builds the table body HTML from the array of item objects returned by the API.
- * Uses template literals (`backticks`) to inject values — same idea as Python f-strings.
+ * Uses template literals (`backticks`) to inject values - same idea as Python f-strings.
  */
 function renderRows(items) {
     if (!items.length) {
@@ -476,7 +476,7 @@ window.openModal = async function (id) {
         const item = await res.json();
 
         // Read-only strings: escapeHtml so odd characters in item names or notes can’t break the markup.
-        // Detail panel for “View”: matches the DB fields we care about on the floor —
+        // Detail panel for “View”: matches the DB fields we care about on the floor -
         // where it was lost/found vs where it’s stored, reporting + event dates, then claimant info above staff notes.
         modalBody.innerHTML = `
         <h2>${escapeHtml(item.item_name)}</h2>

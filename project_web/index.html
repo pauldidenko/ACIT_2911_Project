@@ -18,16 +18,26 @@
         <div class="login-card" id="loginCard">
             <h2>Login</h2>
             <form id="adminLoginForm">
-                <label>
-                    Username
-                    <input id="username" name="username" type="text" autocomplete="username" required />
-                </label>
-                <label>
-                    Password
-                    <input id="password" name="password" type="password" autocomplete="current-password" required />
-                </label>
+                <div id="loginStepCredentials">
+                    <label>
+                        Username
+                        <input id="username" name="username" type="text" autocomplete="username" required />
+                    </label>
+                    <label>
+                        Password
+                        <input id="password" name="password" type="password" autocomplete="current-password" required />
+                    </label>
+                </div>
+                <!-- MFA: hidden until login.js gets requires2FA from POST /api/auth/login. -->
+                <div id="loginStepMfa" class="login-mfa-step" hidden>
+                    <p class="login-mfa-hint">Enter the 6-digit code from your authenticator app.</p>
+                    <label>
+                        Authentication code
+                        <input id="totpCode" name="totpCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" />
+                    </label>
+                </div>
                 <p id="loginError" class="login-error"></p>
-                <button type="submit"><i class="bi bi-box-arrow-right"></i>Sign In</button>
+                <button type="submit" id="loginSubmitBtn"><i class="bi bi-box-arrow-right"></i>Sign In</button>
                 <button type="button" class="login-cancel" id="closeLoginBtn">Cancel</button>
             </form>
         </div>
