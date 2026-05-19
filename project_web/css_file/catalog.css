@@ -261,7 +261,6 @@
 /* Row hover effect to make the table feel more interactive */
 .lost-table tbody tr:hover {
     background-color: #eaf3ff;
-    cursor: pointer;
 }
 
 /* Add pink accent line on the left when hovering */
