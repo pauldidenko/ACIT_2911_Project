@@ -13,6 +13,10 @@
 </head>
 
 <body>
+<body>
+    <!-- Accessibility skip link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see login.js + login.css). -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true" aria-modal="true" role="dialog">
         <div class="login-card" id="loginCard">
@@ -75,50 +79,61 @@
     </section>
     </div>
     </div>
-    <main class="card-catalog">
+    <main id="main-content" class="card-catalog">
         <div class="container">
             <h2>Recent items:</h2>
             <!-- Lost / Found tables: tbody is empty in HTML; project_web/js/index.js fills rows from /api/public/items/recent/... -->
-            <section class="lost-board">
-                <h2>Lost Items</h2>
-                <div class="lost-items-list">
-                    <table class="lost-table">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Date Reported</th>
-                                <th>Campus</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lostItemsBody"></tbody>
-                    </table>
-                </div>
+            <section class="lost-board" aria-labelledby="lost-title">
+                <h2 id="lost-title">Lost Items</h2>
+            
+                <table class="lost-table" tabindex="0">
+                    <caption>Recent lost items reported by users</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Item Name</th>
+                            <th scope="col">Date Reported</th>
+                            <th scope="col">Campus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lostItemsBody"></tbody>
+                </table>
             </section>
-            <section class="found-board">
-                <h2>Found Items</h2>
-                <div class="found-items-list">
-                    <table class="found-table">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Date Found</th>
-                                <th>Campus</th>
-                            </tr>
-                        </thead>
-                        <tbody id="foundItemsBody"></tbody>
-                    </table>
-                </div>
+            <section class="found-board" aria-labelledby="found-title">
+                <h2 id="found-title">Found Items</h2>
+            
+                <table class="found-table" tabindex="0">
+                    <caption>Recent found items reported by users</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Item Name</th>
+                            <th scope="col">Date Found</th>
+                            <th scope="col">Campus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="foundItemsBody"></tbody>
+                </table>
             </section>
         </div>
     </main>
     <!-- Footer -->
-    <div class="i-btn">
-        <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
-        <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
-        <a href="catalog.html" class="catalog-btn" id="navQuickCatalog" hidden><i class="bi bi-box-seam-fill"></i></a>
-        <!-- Same visibility rules as header: hidden until logged in (see login.js setAuthenticated). -->
-        <a href="account.html" class="account1-btn" id="navQuickAccount" hidden><i class="bi bi-person-fill"></i></a>
-    </div>
+        <!-- Floating navigation buttons -->
+        <div class="i-btn" aria-label="Quick navigation">
+            <a href="#" class="circle-btn" aria-label="Back to top">
+                <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+            </a>
+        
+            <a href="index.html" class="home-btn" aria-label="Go to home page">
+                <i class="bi bi-house" aria-hidden="true"></i>
+            </a>
+        
+            <a href="catalog.html" class="catalog-btn" aria-label="Go to catalog page">
+                <i class="bi bi-box-seam-fill" aria-hidden="true"></i>
+            </a>
+        
+            <a href="account.html" class="account1-btn" aria-label="Go to account page">
+                <i class="bi bi-person" aria-hidden="true"></i>
+            </a>
+        </div>
     
 
     <footer class="footer">

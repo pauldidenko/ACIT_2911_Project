@@ -308,3 +308,77 @@ body {
 .account1-btn i {
     font-size: 28px;
 }
+
+/* ===== Accessibility ===== */
+
+caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+    position: absolute;
+    top: -50px;
+    left: 10px;
+    background-color: #f472b6;
+    color: black;
+    padding: 10px 16px;
+    border: 2px solid black;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+    z-index: 9999;
+}
+
+.skip-link:focus {
+    top: 10px;
+}
+
+/* Strong visible keyboard focus */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.circle-btn:focus-visible,
+.home-btn:focus-visible,
+.catalog-btn:focus-visible,
+.account1-btn:focus-visible,
+.login-cancel:focus-visible,
+.login:focus-visible,
+.Signup:focus-visible {
+    outline: 4px solid #f472b6;
+    outline-offset: 3px;
+}
+
+.lost-table:focus-visible,
+.found-table:focus-visible {
+    outline: 4px solid #f472b6;
+    outline-offset: 4px;
+    border-radius: 10px;
+}
+
+/* Better focus for table / nav links */
+.nav-list a:focus-visible,
+.footer a:focus-visible {
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+}
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
