@@ -36,7 +36,7 @@
     "supertest": "^7.2.2"
   },
   "engines": {
-    "node": "25.2.1",
-    "npm": "11.x"
+    "node": "22.x",
+    "npm": "10.x"
   }
 }
