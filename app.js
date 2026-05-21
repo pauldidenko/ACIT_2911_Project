@@ -1,5 +1,5 @@
 /**
- * app.js — Lost & Found backend (Express 5 + SQLite + sessions + multipart uploads).
+ * app.js - Lost & Found backend (Express 5 + SQLite + sessions + multipart uploads).
  *
  * For teammates:
  * - Run: `npm start` (uses PORT and paths from `.env`; defaults in code if missing).
@@ -10,20 +10,25 @@
  * --- Public “home preview” API (added for index.html) ---
  * These routes are intentionally open (no login cookie required). They only return a tiny
  * slice of the database so visitors can see recent activity without exposing admin data:
- *   GET /api/public/items/recent/lost   — status=lost, LIMIT 3, newest by date_reported
- *   GET /api/public/items/recent/found — status=found, LIMIT 3, newest by date_found (fallback date_reported)
- * Optional query: ?search=… — same text search idea as the admin list (name / description / location), still capped at 3 rows.
+ *   GET /api/public/items/recent/lost   - status=lost, LIMIT 3, newest by date_reported
+ *   GET /api/public/items/recent/found - status=found, LIMIT 3, newest by date_found (fallback date_reported)
+ * Optional query: ?search=… - same text search idea as the admin list (name / description / location), still capped at 3 rows.
  * The full catalog stays on GET /api/admin/items (requires admin session).
  *
  * --- Account dashboard stats (account.html) ---
- * GET /api/admin/stats — admin session only (`requireAdmin`). Returns JSON counts from the `items`
- * table for the four stat cards: totalItems (rows whose status is lost, found, or claimed only —
+ * GET /api/admin/stats - admin session only (`requireAdmin`). Returns JSON counts from the `items`
+ * table for the four stat cards: totalItems (rows whose status is lost, found, or claimed only -
  * excludes deleted and any other status), plus totalLost / totalFound / totalClaimed (exact status
  * match). Wired from project_web/js/account.js after the session check passes.
  *
  * - Items: GET/POST `/api/admin/items` is one `app.route()` so GET (list) and POST (create + optional image) stay together.
  * - Images: uploaded to `project_web/uploads/items`, URL stored in DB as `/uploads/items/<filename>`.
  * - `GET /add-item.html` injects `<meta name="app-api-origin">` so the add-item page always knows the real server URL.
+ *
+ * --- MFA (authenticator app, 6-digit codes) ---
+ * Uses `otplib` (TOTP, 30-second codes) + `qrcode` for setup. Secret stored in `admin_users.totp_secret`.
+ * Login: POST `/api/auth/login` with optional `totpCode`; responds `{ requires2FA: true }` when password is OK but code missing.
+ * Account page: GET/POST `/api/admin/2fa/*` - status, generate QR, verify, enable, disable (see comments on each route).
  */
 import express from "express";
 import bodyParser from "body-parser";
@@ -36,6 +41,8 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import multer from "multer";
+import { authenticator } from "otplib"; // TOTP: 6-digit codes, 30s window (Google Authenticator–compatible)
+import QRCode from "qrcode"; // Data URL for MFA setup QR on account page
 
 // Load values from .env into process.env (PORT, DB_FILE, SESSION_SECRET, etc).
 dotenv.config();
@@ -129,6 +136,18 @@ async function ensureItemsImageColumn() {
   }
 }
 
+// Older databases may lack totp_secret; add it on startup so MFA works without manual ALTER TABLE.
+async function ensureTotpSecretColumn() {
+  const cols = await allAsync(`PRAGMA table_info(admin_users)`);
+  const names = new Set(cols.map((c) => c.name));
+  if (names.has("totp_secret")) return;
+  try {
+    await runAsync(`ALTER TABLE admin_users ADD COLUMN totp_secret TEXT`);
+  } catch (err) {
+    if (!/duplicate column/i.test(String(err.message))) throw err;
+  }
+}
+
 // Safety check: app should not run without at least one admin account.
 async function ensureAdminExists() {
   const users = await allAsync(`SELECT id, username FROM admin_users LIMIT 1`);
@@ -180,9 +199,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "project_web", "index.html"));
 });
 
-// Login endpoint: verify username + bcrypt password hash, then create session.
+// Login: username + password first. If this user has MFA enabled, we do NOT create a session until
+// they also send a valid 6-digit code from their phone app (same request or a follow-up submit).
 app.post("/api/auth/login", async (req, res) => {
-  const { username, password } = req.body ?? {};
+  const { username, password, totpCode } = req.body ?? {};
 
   if (!username || !password) {
     return res
@@ -192,7 +212,7 @@ app.post("/api/auth/login", async (req, res) => {
 
   try {
     const users = await allAsync(
-      `SELECT id, username, password_hash FROM admin_users WHERE username = ?`,
+      `SELECT id, username, password_hash, totp_secret FROM admin_users WHERE username = ?`,
       [username],
     );
     if (users.length === 0) {
@@ -205,6 +225,23 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
+    if (admin.totp_secret) {
+      // Password was correct - tell the browser to show the code field (index.html login overlay).
+      if (!totpCode) {
+        return res.json({ requires2FA: true });
+      }
+
+      // Check the 6-digit code against the secret saved when they enabled MFA on the account page.
+      const isValid = authenticator.verify({
+        token: String(totpCode).trim(),
+        secret: admin.totp_secret,
+      });
+
+      if (!isValid) {
+        return res.status(401).json({ error: "Invalid authentication code" });
+      }
+    }
+
     req.session.isAdmin = true;
     req.session.adminId = admin.id;
     req.session.username = admin.username;
@@ -213,6 +250,150 @@ app.post("/api/auth/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({ error: "Server error during login" });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// MFA admin routes (account.html). User must already be logged in (requireAdmin).
+// Flow to turn MFA on: setup → verify (proves phone scanned QR) → enable (writes DB).
+// ---------------------------------------------------------------------------
+
+/** Account page: is MFA on for the logged-in user? { has2FA: true|false } */
+app.get("/api/admin/2fa/status", requireAdmin, async (req, res) => {
+  try {
+    const username = req.session.username;
+    if (!username) {
+      return res.status(400).json({ error: "Username not found in session" });
+    }
+
+    const users = await allAsync(
+      `SELECT totp_secret FROM admin_users WHERE username = ?`,
+      [username],
+    );
+    if (users.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    return res.json({ has2FA: Boolean(users[0].totp_secret) });
+  } catch (error) {
+    console.error("2FA status error:", error);
+    return res.status(500).json({ error: "Failed to check MFA status" });
+  }
+});
+
+/** Start setup: new random secret + QR image. Secret stays in session only until enable - not in DB yet. */
+app.get("/api/admin/2fa/setup", requireAdmin, async (req, res) => {
+  try {
+    const username = req.session.username;
+    if (!username) {
+      return res.status(400).json({ error: "Username not found in session" });
+    }
+
+    const users = await allAsync(
+      `SELECT id FROM admin_users WHERE username = ?`,
+      [username],
+    );
+    if (users.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    const secret = authenticator.generateSecret();
+    const serviceName = "BCIT Lost and Found";
+    const otpauth = authenticator.keyuri(username, serviceName, secret);
+
+    let qrCode = null;
+    try {
+      qrCode = await QRCode.toDataURL(otpauth, {
+        errorCorrectionLevel: "M",
+        margin: 1,
+      });
+    } catch (qrErr) {
+      console.error("QR code generation error:", qrErr);
+    }
+
+    // Stash in session so verify/enable know which secret we're testing (not committed until enable).
+    req.session.temp2FASecret = secret;
+
+    return res.json({
+      secret,
+      qrCode,
+      manualEntryKey: secret,
+    });
+  } catch (error) {
+    console.error("2FA setup error:", error);
+    return res.status(500).json({ error: "Failed to generate MFA setup" });
+  }
+});
+
+/** User entered a code during setup - confirm their app is synced before we save the secret. */
+app.post("/api/admin/2fa/verify", requireAdmin, async (req, res) => {
+  const { totpCode } = req.body ?? {};
+  try {
+    const tempSecret = req.session.temp2FASecret;
+    if (!tempSecret) {
+      return res.status(400).json({ error: "No MFA setup in progress" });
+    }
+
+    const isValid = authenticator.verify({
+      token: String(totpCode || "").trim(),
+      secret: tempSecret,
+    });
+
+    if (!isValid) {
+      return res.status(400).json({ error: "Invalid code" });
+    }
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("2FA verify error:", error);
+    return res.status(500).json({ error: "Failed to verify code" });
+  }
+});
+
+/** After verify succeeded: copy temp secret from session into admin_users.totp_secret (MFA is now on). */
+app.post("/api/admin/2fa/enable", requireAdmin, async (req, res) => {
+  try {
+    const username = req.session.username;
+    if (!username) {
+      return res.status(400).json({ error: "Username not found in session" });
+    }
+
+    const tempSecret = req.session.temp2FASecret;
+    if (!tempSecret) {
+      return res.status(400).json({ error: "No MFA setup in progress" });
+    }
+
+    await runAsync(
+      `UPDATE admin_users SET totp_secret = ? WHERE username = ?`,
+      [tempSecret, username],
+    );
+
+    delete req.session.temp2FASecret;
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("2FA enable error:", error);
+    return res.status(500).json({ error: "Failed to enable MFA" });
+  }
+});
+
+/** Turn MFA off: clear totp_secret so login only needs password again. */
+app.post("/api/admin/2fa/disable", requireAdmin, async (req, res) => {
+  try {
+    const username = req.session.username;
+    if (!username) {
+      return res.status(400).json({ error: "Username not found in session" });
+    }
+
+    await runAsync(
+      `UPDATE admin_users SET totp_secret = NULL WHERE username = ?`,
+      [username],
+    );
+    delete req.session.temp2FASecret;
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("2FA disable error:", error);
+    return res.status(500).json({ error: "Failed to disable MFA" });
   }
 });
 
@@ -234,7 +415,7 @@ app.get("/api/auth/session", (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Public recent-items endpoints (home page — project_web/js/index.js)
+// Public recent-items endpoints (home page - project_web/js/index.js)
 // ---------------------------------------------------------------------------
 // Why this exists: index.html is public. We must NOT use /api/admin/items there
 // (that would 401 without a cookie). Instead these handlers return only safe columns
@@ -244,7 +425,7 @@ const PUBLIC_RECENT_LIMIT = 3;
 /**
  * If `search` is non-empty, narrows the query with the same LIKE pattern we use on the
  * admin catalog (item name, description, or location text). Still combined with LIMIT 3
- * in the route handlers — this is for optional filtering only, not bulk export.
+ * in the route handlers - this is for optional filtering only, not bulk export.
  */
 function appendPublicSearchFilters(search, whereParts, params) {
   const term = String(search || "").trim();
@@ -348,7 +529,7 @@ app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
   }
 });
 
-// Main catalog API: GET list + POST create on same path (single Route — fixes POST not matching when registered separately on Express 5 / router).
+// Main catalog API: GET list + POST create on same path (single Route - fixes POST not matching when registered separately on Express 5 / router).
 async function listAdminItems(req, res) {
   // Pagination controls.
   const page = Math.max(1, Number(req.query.page) || 1);
@@ -382,9 +563,19 @@ async function listAdminItems(req, res) {
   const sortExpression =
     sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
 
-  // Build dynamic WHERE clause only for provided filters.
+  // Piece together WHERE + bound values in one pass. Older code wiped the WHERE array when you
+  // chose a status filter but forgot to reset `params`, so SQLite got extra bindings and blew up
+  // with SQLITE_RANGE - annoying bug that only showed up after you’d already typed a search, etc.
   const where = [];
   const params = [];
+
+  if (status) {
+    where.push("status = ?");
+    params.push(status);
+  } else {
+    // No dropdown choice: keep the table useful by hiding claimed/deleted unless you filter to them.
+    where.push("status IN ('lost', 'found')");
+  }
 
   if (search) {
     where.push(
@@ -397,10 +588,7 @@ async function listAdminItems(req, res) {
     where.push("category = ?");
     params.push(category);
   }
-  if (status) {
-    where.push("status = ?");
-    params.push(status);
-  }
+
   if (campus) {
     where.push("campus = ?");
     params.push(campus);
@@ -421,7 +609,7 @@ async function listAdminItems(req, res) {
     const totalItems = countRows[0]?.total || 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
-    // Query 2: current page of item rows.
+    // Query 2: current page - includes everything the table needs, plus claimant fields for clients that want them without a second request.
     const itemRows = await allAsync(
       `
       SELECT
@@ -452,7 +640,7 @@ async function listAdminItems(req, res) {
 }
 
 // Create item (multipart: text fields + optional single image). Admin only.
-// template_server.js uses paths like /admin/... — we expose both /api/admin/items and /admin/items.
+// template_server.js uses paths like /admin/... - we expose both /api/admin/items and /admin/items.
 async function handleCreateItem(req, res) {
   const b = req.body ?? {};
   const item_name = String(b.item_name ?? "").trim();
@@ -545,6 +733,151 @@ async function handleCreateItem(req, res) {
   }
 }
 
+// Admin catalog: update an existing row (multipart, same field names as POST create / add-item.html).
+// The edit form in catalog.js PUTs here; we keep date_claimed if the form doesn’t send it, and optionally swap the image file on disk.
+async function handleUpdateItem(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 1) {
+    return res.status(400).json({ error: "Invalid item id" });
+  }
+
+  let existingRows;
+  try {
+    existingRows = await allAsync(
+      `
+      SELECT id, image_path, date_claimed
+      FROM items
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [id],
+    );
+  } catch (error) {
+    console.error("Update item - lookup failed:", error);
+    return res.status(500).json({ error: "Failed to update item" });
+  }
+
+  if (existingRows.length === 0) {
+    return res.status(404).json({ error: "Item not found" });
+  }
+
+  const existing = existingRows[0];
+  const b = req.body ?? {};
+  const item_name = String(b.item_name ?? "").trim();
+  const category = String(b.category ?? "").trim();
+  const campus = String(b.campus ?? "").trim();
+  const status = String(b.status ?? "").trim();
+
+  const allowedCategories = [
+    "Electronics",
+    "Accessories",
+    "Clothing",
+    "Keys & ID",
+    "School Supplies",
+    "Bottles & containers",
+    "Sports & Fitness",
+    "Documents",
+    "Misc",
+  ];
+  const allowedCampus = ["Burnaby", "Downtown", "Aerospace"];
+  const allowedStatus = ["lost", "found", "claimed", "deleted"];
+
+  if (!item_name || !category || !campus || !status) {
+    return res.status(400).json({
+      error:
+        "Missing required fields: item_name, category, campus, and status are required.",
+    });
+  }
+  if (!allowedCategories.includes(category)) {
+    return res.status(400).json({ error: "Invalid category." });
+  }
+  if (!allowedCampus.includes(campus)) {
+    return res.status(400).json({ error: "Invalid campus." });
+  }
+  if (!allowedStatus.includes(status)) {
+    return res.status(400).json({ error: "Invalid status." });
+  }
+
+  const description = String(b.description ?? "").trim() || null;
+  const location_details = String(b.location_details ?? "").trim() || null;
+  const stored_location = String(b.stored_location ?? "").trim() || null;
+  const date_lost = String(b.date_lost ?? "").trim() || null;
+  const date_found = String(b.date_found ?? "").trim() || null;
+  // Edit form doesn’t include date_claimed yet - don’t wipe it on every save.
+  const date_claimed =
+    String(b.date_claimed ?? "").trim() || existing.date_claimed || null;
+  const claimant_name = String(b.claimant_name ?? "").trim() || null;
+  const claimant_contact = String(b.claimant_contact ?? "").trim() || null;
+  const notes = String(b.notes ?? "").trim() || null;
+
+  let image_path = existing.image_path;
+  // New file optional: if staff picked one, store new path and try to delete the previous upload from disk.
+  if (req.file) {
+    if (
+      existing.image_path &&
+      existing.image_path.startsWith("/uploads/items/")
+    ) {
+      const rel = existing.image_path.replace(/^\//, "");
+      const diskPath = path.join(__dirname, "project_web", rel);
+      try {
+        fs.unlinkSync(diskPath);
+      } catch (_unlinkErr) {
+        /* previous file already gone - ignore */
+      }
+    }
+    image_path = `/uploads/items/${req.file.filename}`;
+  }
+
+  try {
+    await runAsync(
+      `
+      UPDATE items SET
+        item_name = ?,
+        description = ?,
+        category = ?,
+        campus = ?,
+        location_details = ?,
+        stored_location = ?,
+        date_lost = ?,
+        date_found = ?,
+        date_claimed = ?,
+        status = ?,
+        claimant_name = ?,
+        claimant_contact = ?,
+        notes = ?,
+        image_path = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+      `,
+      [
+        item_name,
+        description,
+        category,
+        campus,
+        location_details,
+        stored_location,
+        date_lost,
+        date_found,
+        date_claimed,
+        status,
+        claimant_name,
+        claimant_contact,
+        notes,
+        image_path,
+        id,
+      ],
+    );
+
+    return res.json({ success: true, id, image_path });
+  } catch (error) {
+    console.error("Failed to update item:", error);
+    return res.status(500).json({
+      error: "Failed to update item",
+      detail: String(error?.message || error),
+    });
+  }
+}
+
 app
   .route("/api/admin/items")
   .get(requireAdmin, listAdminItems)
@@ -578,6 +911,20 @@ app.get("/add-item.html", (req, res) => {
   }
 });
 
+// Update existing catalog row (same multipart contract as POST /api/admin/items - used by catalog edit popup).
+app.put(
+  "/api/admin/items/:id",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleUpdateItem,
+);
+app.put(
+  "/admin/items/:id",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleUpdateItem,
+);
+
 // Multer errors → JSON (keep before static so POST failures never fall through to HTML-only stacks).
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -597,6 +944,7 @@ app.use((err, req, res, next) => {
 });
 
 // ! =========== NEW by Gai Deng ===================== ✅✅
+// Single-row JSON for catalog “View” (read-only) and “Edit” (form pre-fill). Includes `description` because the edit form matches add-item.html.
 app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
   const id = req.params.id;
 
@@ -606,11 +954,17 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
       SELECT 
         id,
         item_name,
+        description,
         category,
         campus,
         status,
         location_details,
+        stored_location,
+        date_lost,
+        date_found,
         date_reported,
+        claimant_name,
+        claimant_contact,
         notes,
         image_path
       FROM items
@@ -690,6 +1044,7 @@ async function startServer() {
   try {
     await initializeDatabase();
     await ensureItemsImageColumn();
+    await ensureTotpSecretColumn();
     await ensureAdminExists();
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Server running at http://localhost:${PORT}`);

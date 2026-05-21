@@ -13,6 +13,8 @@
 
     display: flex;
     align-items: center;
+    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 /* Main Account page title */
@@ -101,12 +103,178 @@
     font-weight: bold;
 }
 
-/* ========= Quick action buttons ========= */
-/* Vertical button layout */
-.quick-actions {
+/*
+ * ========= MFA (account.html) =========
+ * Card: status text + Set up / Disable buttons (account.js toggles disabled).
+ * Modal: scrollable QR setup popup (#mfaSetupOverlay).
+ */
+.mfa-status-text {
+    margin: 0 0 18px 0;
+    line-height: 1.5;
+    color: #111827;
+}
+
+.mfa-actions {
     display: flex;
     flex-direction: column;
     gap: 15px;
+}
+
+.mfa-actions .account-btn {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+/* Inactive MFA button - visible but not clickable while the other action applies. */
+.mfa-actions .account-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+    background-color: #e5e7eb;
+    color: #6b7280;
+    box-shadow: none;
+    transform: none;
+    pointer-events: none;
+}
+
+.mfa-actions .account-btn:disabled:hover,
+.mfa-actions .account-btn:disabled:active {
+    background-color: #e5e7eb;
+    color: #6b7280;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Full-screen setup popup; .is-open from account.js when user clicks Set up MFA. */
+.mfa-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.mfa-overlay.is-open {
+    display: flex;
+}
+
+/* Yellow card body - scrolls on small screens when QR + manual key + form are tall. */
+.mfa-modal {
+    position: relative;
+    width: min(440px, 94vw);
+    max-height: calc(100dvh - 2.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    background-color: #fefce8;
+    border: 2px solid black;
+    border-radius: 12px;
+    box-shadow: 4px 4px 0px 0px #000000;
+    padding: 28px 24px 24px;
+    margin: auto;
+}
+
+.mfa-modal h2 {
+    margin: 0 0 12px 0;
+    padding-right: 2rem;
+    clear: right;
+}
+
+.mfa-close-btn {
+    position: sticky;
+    top: 0;
+    float: right;
+    margin: -8px -4px 0 0;
+    z-index: 1;
+    border: none;
+    background: #fefce8;
+    font-size: 1.75rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #111;
+}
+
+.mfa-modal-hint {
+    margin: 0 0 16px 0;
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.mfa-qr-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.mfa-qr-wrap img {
+    width: 200px;
+    height: 200px;
+    border: 2px solid black;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.mfa-manual-key {
+    margin: 0 0 16px 0;
+    font-size: 0.9rem;
+    word-break: break-all;
+}
+
+.mfa-manual-key code {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.mfa-code-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.mfa-code-label input {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 2px solid black;
+    border-radius: 8px;
+    font-size: 1.25rem;
+    letter-spacing: 0.2em;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.mfa-error {
+    color: #b91c1c;
+    min-height: 1.25rem;
+    font-size: 0.92rem;
+    margin: 0 0 8px 0;
+}
+
+.mfa-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mfa-modal-actions .account-btn {
+    width: 100%;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
 }
 
 /* Main account buttons */

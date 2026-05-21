@@ -1,172 +1,281 @@
-<!DOCTYPE html>
-<!-- add-item.html — Admin-only form to insert a row into the `items` table (optional photo upload). -->
+<!doctype html>
+<!-- add-item.html - Admin-only form to insert a row into the `items` table (optional photo upload). -->
 <!-- Served by Express at GET /add-item.html with injected meta app-api-origin (see app.js). -->
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Leave empty when using npm start (same port as Express). If you use Live Server, set to your Node URL, e.g. http://localhost:3000 — must match the port in .env / terminal. -->
-    <meta name="app-api-origin" content="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Leave empty when using npm start (same port as Express). If you use Live Server, set to your Node URL, e.g. http://localhost:3000 - must match the port in .env / terminal. -->
+    <meta name="app-api-origin" content="" />
     <title>BCIT lost and found | Add Item</title>
-    <link rel="stylesheet" href="./css_file/style.css">
-    <link rel="stylesheet" href="./css_file/add-item.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
+    <link rel="stylesheet" href="./css_file/style.css" />
+    <link rel="stylesheet" href="./css_file/add-item.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+  </head>
 
-<body>
+  <body>
     <header class="navbar">
-        <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
-        <nav class="nav-links">
-            <ul class="nav-list">
-                <li><a href="index.html" class="home"><i class="bi bi-house"></i> Home</a></li>
-                <li><a href="catalog.html" class="catalog"><i class="bi bi-box-seam-fill"></i> Catalog</a></li>
-                <li><a href="account.html" class="account"><i class="bi bi-person-fill"></i> Account</a></li>
-                <li><a href="#" id="logoutBtn" class="login"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-            </ul>
-        </nav>
+      <h1 class="logo">
+        <a href="index.html" class="logo1">BCIT Lost and Found</a>
+      </h1>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li>
+            <a href="index.html" class="home"
+              ><i class="bi bi-house"></i> Home</a
+            >
+          </li>
+          <li>
+            <a href="catalog.html" class="catalog"
+              ><i class="bi bi-box-seam-fill"></i> Catalog</a
+            >
+          </li>
+          <li>
+            <a href="account.html" class="account"
+              ><i class="bi bi-person-fill"></i> Account</a
+            >
+          </li>
+          <li>
+            <a href="#" id="logoutBtn" class="login"
+              ><i class="bi bi-box-arrow-right"></i> Logout</a
+            >
+          </li>
+        </ul>
+      </nav>
     </header>
 
     <div id="pageBanner" class="page-banner" role="status" hidden></div>
 
     <section class="lost-hero">
-        <div class="hero-content">
-            <h1>Add Item</h1>
-            <p>Create a new record in the lost &amp; found catalog (saved to the database).</p>
-        </div>
+      <div class="hero-content">
+        <h1>Add Item</h1>
+        <p>
+          Create a new record in the lost &amp; found catalog (saved to the
+          database).
+        </p>
+      </div>
     </section>
 
     <section class="add-item-section">
-        <form id="addItemForm" class="add-item-form" action="#" method="post" enctype="multipart/form-data">
+      <form
+        id="addItemForm"
+        class="add-item-form"
+        action="#"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="form-group">
+          <label for="item_name">Item name</label>
+          <input
+            type="text"
+            id="item_name"
+            name="item_name"
+            placeholder="Example: Black wallet"
+            required
+          />
+        </div>
 
-            <div class="form-group">
-                <label for="item_name">Item name</label>
-                <input type="text" id="item_name" name="item_name" placeholder="Example: Black wallet" required>
-            </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select category</option>
+            <option>Electronics</option>
+            <option>Accessories</option>
+            <option>Clothing</option>
+            <option>Keys & ID</option>
+            <option>School Supplies</option>
+            <option>Bottles & containers</option>
+            <option>Sports & Fitness</option>
+            <option>Documents</option>
+            <option>Misc</option>
+          </select>
+        </div>
 
-            <div class="form-group">
-                <label for="category">Category</label>
-                <select id="category" name="category" required>
-                    <option value="">Select category</option>
-                    <option>Electronics</option>
-                    <option>Accessories</option>
-                    <option>Clothing</option>
-                    <option>Keys & ID</option>
-                    <option>School Supplies</option>
-                    <option>Bottles & containers</option>
-                    <option>Sports & Fitness</option>
-                    <option>Documents</option>
-                    <option>Misc</option>
-                </select>
-            </div>
+        <div class="form-group">
+          <label for="campus">Campus</label>
+          <select id="campus" name="campus" required>
+            <option value="">Select campus</option>
+            <option>Burnaby</option>
+            <option>Downtown</option>
+            <option>Aerospace</option>
+          </select>
+        </div>
 
-            <div class="form-group">
-                <label for="campus">Campus</label>
-                <select id="campus" name="campus" required>
-                    <option value="">Select campus</option>
-                    <option>Burnaby</option>
-                    <option>Downtown</option>
-                    <option>Aerospace</option>
-                </select>
-            </div>
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status" required>
+            <option value="">Select status</option>
+            <option value="lost">Lost</option>
+            <option value="found">Found</option>
+            <option value="claimed">Claimed</option>
+            <option value="deleted">Deleted</option>
+          </select>
+        </div>
 
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" required>
-                    <option value="">Select status</option>
-                    <option value="lost">Lost</option>
-                    <option value="found">Found</option>
-                    <option value="claimed">Claimed</option>
-                    <option value="deleted">Deleted</option>
-                </select>
-            </div>
+        <div class="form-group">
+          <label for="location_details"
+            >Where found / reported
+            <span class="optional">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="location_details"
+            name="location_details"
+            placeholder="Example: Library, SE12, cafeteria"
+          />
+        </div>
 
-            <div class="form-group">
-                <label for="location_details">Where found / reported <span class="optional">(optional)</span></label>
-                <input type="text" id="location_details" name="location_details"
-                    placeholder="Example: Library, SE12, cafeteria">
-            </div>
+        <div class="form-group">
+          <label for="stored_location"
+            >Stored location <span class="optional">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="stored_location"
+            name="stored_location"
+            placeholder="Example: Locker A1, shelf B2"
+          />
+        </div>
 
-            <div class="form-group">
-                <label for="stored_location">Stored location <span class="optional">(optional)</span></label>
-                <input type="text" id="stored_location" name="stored_location"
-                    placeholder="Example: Locker A1, shelf B2">
-            </div>
+        <div class="form-group">
+          <label for="date_lost"
+            >Date lost <span class="optional">(optional)</span></label
+          >
+          <input type="date" id="date_lost" name="date_lost" />
+        </div>
 
-            <div class="form-group">
-                <label for="date_lost">Date lost <span class="optional">(optional)</span></label>
-                <input type="date" id="date_lost" name="date_lost">
-            </div>
+        <div class="form-group">
+          <label for="date_found"
+            >Date found <span class="optional">(optional)</span></label
+          >
+          <input type="date" id="date_found" name="date_found" />
+        </div>
 
-            <div class="form-group">
-                <label for="date_found">Date found <span class="optional">(optional)</span></label>
-                <input type="date" id="date_found" name="date_found">
-            </div>
+        <div class="form-group full-width">
+          <label for="description"
+            >Description <span class="optional">(optional)</span></label
+          >
+          <textarea
+            id="description"
+            name="description"
+            rows="4"
+            placeholder="Colour, brand, serial number, or other details."
+          ></textarea>
+        </div>
 
-            <div class="form-group full-width">
-                <label for="description">Description <span class="optional">(optional)</span></label>
-                <textarea id="description" name="description" rows="4"
-                    placeholder="Colour, brand, serial number, or other details."></textarea>
-            </div>
+        <div class="form-group">
+          <label for="claimant_name"
+            >Claimant name <span class="optional">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="claimant_name"
+            name="claimant_name"
+            placeholder="If claimed"
+          />
+        </div>
 
-            <div class="form-group">
-                <label for="claimant_name">Claimant name <span class="optional">(optional)</span></label>
-                <input type="text" id="claimant_name" name="claimant_name" placeholder="If claimed">
-            </div>
+        <div class="form-group">
+          <label for="claimant_contact"
+            >Claimant contact <span class="optional">(optional)</span></label
+          >
+          <input
+            type="text"
+            id="claimant_contact"
+            name="claimant_contact"
+            placeholder="Phone or email"
+          />
+        </div>
 
-            <div class="form-group">
-                <label for="claimant_contact">Claimant contact <span class="optional">(optional)</span></label>
-                <input type="text" id="claimant_contact" name="claimant_contact" placeholder="Phone or email">
-            </div>
+        <div class="form-group full-width">
+          <label for="notes"
+            >Staff notes <span class="optional">(optional)</span></label
+          >
+          <textarea
+            id="notes"
+            name="notes"
+            rows="3"
+            placeholder="Internal notes only."
+          ></textarea>
+        </div>
 
-            <div class="form-group full-width">
-                <label for="notes">Staff notes <span class="optional">(optional)</span></label>
-                <textarea id="notes" name="notes" rows="3" placeholder="Internal notes only."></textarea>
-            </div>
+        <div class="form-group full-width">
+          <label for="image"
+            >Item photo
+            <span class="optional">(optional, one image)</span></label
+          >
+          <input type="file" id="image" name="image" accept="image/*" />
+        </div>
 
-            <div class="form-group full-width">
-                <label for="image">Item photo <span class="optional">(optional, one image)</span></label>
-                <input type="file" id="image" name="image" accept="image/*">
-            </div>
-
-            <div class="form-buttons full-width">
-                <button type="submit" class="save-btn">Save item</button>
-                <a href="catalog.html" class="cancel-btn">Cancel</a>
-            </div>
-        </form>
+        <div class="form-buttons full-width">
+          <button type="submit" class="save-btn">Save item</button>
+          <a href="catalog.html" class="cancel-btn">Cancel</a>
+        </div>
+      </form>
     </section>
 
     <!-- Footer -->
-    <div class="i-btn">
-        <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
-        <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
-        <a href="catalog.html" class="catalog-btn"><i class="bi bi-box-seam-fill"></i></a>
-        <a href="account.html" class="account1-btn"><i class="bi bi-person"></i></a>
+    <!-- Floating navigation buttons -->
+    <div class="i-btn" aria-label="Quick navigation">
+      <a href="#" class="circle-btn" aria-label="Back to top">
+        <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+      </a>
+
+      <a href="index.html" class="home-btn" aria-label="Go to home page">
+        <i class="bi bi-house" aria-hidden="true"></i>
+      </a>
+
+      <a
+        href="catalog.html"
+        class="catalog-btn"
+        aria-label="Go to catalog page"
+      >
+        <i class="bi bi-box-seam-fill" aria-hidden="true"></i>
+      </a>
+
+      <a
+        href="account.html"
+        class="account1-btn"
+        aria-label="Go to account page"
+      >
+        <i class="bi bi-person" aria-hidden="true"></i>
+      </a>
     </div>
 
     <footer class="footer">
-        <div class="footer-left">
-            <h3>Contact</h3>
-            <p><a href="mailto:lost@bcit.ca">lost@bcit.ca</a></p>
-            <p>416-280-5555</p>
-        </div>
-    
-        <div class="footer-center">
-            <h3>Address</h3>
-            <p><a href="https://www.bcit.ca/">BCIT Burnaby, BC</a></p>
-        </div>
-    
-        <div class="footer-right">
-            <h3>Follow Us</h3>
-            <p><a href="https://www.instagram.com/bcitlostandfound/">Instagram</a></p>
-            <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
-        </div>
-        <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
+      <div class="footer-left">
+        <h3>Contact Us</h3>
+        <p><a href="mailto:lostandfound@bcit.ca">lostandfound@bcit.ca</a></p>
+        <p>(416) 280-5555</p>
+      </div>
+
+      <div class="footer-center">
+        <h3>Address</h3>
+        <p>
+          <a href="https://www.bcit.ca/about/visit/campuses-directions/burnaby/"
+            >3700 Willingdon Ave, V5G 3L1</a
+          >
+        </p>
+      </div>
+
+      <div class="footer-right">
+        <h3>Follow Us</h3>
+        <p>
+          <a href="https://www.instagram.com/bcitlostandfound/">Instagram</a>
+        </p>
+        <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
+      </div>
+      <p class="copyright">
+        &copy; 2026 BCIT Lost and Found. All rights reserved.
+      </p>
     </footer>
-    
+
     <!-- focus effect -->
 
+    <script src="./js/login.js"></script>
     <script src="./js/add-item.js"></script>
-</body>
-
+  </body>
 </html>

@@ -14,6 +14,7 @@ import assert from "node:assert/strict";
 import supertest from "supertest";
 import app from "../app.js";
 import { db } from "../app.js";
+import bcrypt from "bcrypt";
 
 describe("GET /", () => {
   //tests web apps home page is up and running as normal
@@ -32,10 +33,19 @@ describe("POST /api/admin/items with image", () => {
   let agent;
 
   before(async () => {
-    agent = supertest.agent(app); // simulats logged-in admin
+    const hash = await bcrypt.hash("pass", 10);
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT OR IGNORE INTO admin_users (username, password_hash, totp_secret) VALUES (?, ?, NULL)`,
+        ["test_admin", hash],
+        (err) => (err ? reject(err) : resolve()),
+      );
+    });
+
+    agent = supertest.agent(app);
     await agent
       .post("/api/auth/login")
-      .send({ username: "admin", password: "pass" });
+      .send({ username: "test_admin", password: "pass" });
   });
 
   it("returns 201 with image_path when image is uploaded", async () => {
@@ -56,11 +66,21 @@ describe("POST /api/admin/items", () => {
   let agent;
 
   before(async () => {
+    const hash = await bcrypt.hash("pass", 10);
+    await new Promise((resolve, reject) => {
+      db.run(
+        `INSERT OR IGNORE INTO admin_users (username, password_hash, totp_secret) VALUES (?, ?, NULL)`,
+        ["test_admin", hash],
+        (err) => (err ? reject(err) : resolve()),
+      );
+    });
+
     agent = supertest.agent(app);
     await agent
       .post("/api/auth/login")
-      .send({ username: "admin", password: "pass" });
+      .send({ username: "test_admin", password: "pass" });
   });
+
   it("Returns 401 ERROR when not logged in", async () => {
     //requires user to be logged in as admin to add items
     const res = await supertest(app)
@@ -80,20 +100,10 @@ describe("POST /api/admin/items", () => {
   });
 });
 
-// NOTE: Temporarily commenting out DELETE tests until we implement that functionality
-
-// describe("DELETE /api/admin/items/:id", () => {
-//   //tests DELETE functionality, (we do not have that implemented yet)
-//   it("Prevents Deletion of an Item Without Admin Credentials", async () => {
-//     const res = await supertest(app).delete("/api/admin/items/1");
-//     assert.strictEqual(res.status, 401);
-//   });
-// });
-
 describe("GET /api/public/items/recent (home preview)", () => {
   /*
    * Public routes used by project_web/js/index.js on the home page.
-   * Anyone can call them — assertions make sure we never accidentally expose admin-only fields
+   * Anyone can call them - assertions make sure we never accidentally expose admin-only fields
    * and that pagination-by-limit stays capped at 3 for both lost and found previews.
    */
   it("returns recent lost items without auth (200, items array, max 3)", async () => {
@@ -125,5 +135,6 @@ describe("GET /api/public/items/recent (home preview)", () => {
 });
 
 after(() => {
+  db.run(`DELETE FROM admin_users WHERE username = 'test_admin'`);
   db.close();
 });

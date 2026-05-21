@@ -4,7 +4,9 @@
 CREATE TABLE admin_users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL
+    password_hash TEXT NOT NULL,
+    -- NULL = MFA off. When set, holds the shared secret for the admin's authenticator app (Google Authenticator, etc.).
+    totp_secret TEXT
 );
 
 -- =========================
@@ -31,7 +33,7 @@ CREATE TABLE items (
 
     campus TEXT NOT NULL CHECK (campus IN ('Burnaby', 'Downtown', 'Aerospace')),
 
-    location_details TEXT, -- where item was found
+    location_details TEXT, -- where item was lost/found
     stored_location TEXT, -- where item is stored
 
     date_reported DATETIME DEFAULT CURRENT_TIMESTAMP,

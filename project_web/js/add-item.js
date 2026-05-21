@@ -1,5 +1,5 @@
 /**
- * add-item.js — behaviour for `add-item.html` (staff “create catalog item” form).
+ * add-item.js - behaviour for `add-item.html` (staff “create catalog item” form).
  *
  * Teammates:
  * - Form submits via `fetch` to POST `/api/admin/items` with `FormData` (multipart: fields + optional file field `image`).
@@ -8,10 +8,10 @@
  *   probes GET `/api/auth/session`, uses `<meta name="app-api-origin">`, or scans common ports.
  * - When you open the page through Express (`npm start`), the server injects `app-api-origin` and same-origin fetch works.
  * - Success → banner + redirect to `catalog.html`; errors → `#pageBanner` message at top.
+ * - Logout in the header is wired by **login.js** (`AppAuth.wireLogoutWithAsyncUrls` with this file’s `apiUrl()`).
  */
 const form = document.getElementById("addItemForm");
 const pageBanner = document.getElementById("pageBanner");
-const logoutBtn = document.getElementById("logoutBtn");
 
 /** Cached API base: "" = same origin, or full origin like http://localhost:3000 */
 let cachedApiBase;
@@ -54,7 +54,7 @@ async function resolveApiBase() {
 
     const { protocol, hostname } = window.location;
 
-    // Server-injected meta (see app.js GET /add-item.html) — same origin, use relative API URLs.
+    // Server-injected meta (see app.js GET /add-item.html) - same origin, use relative API URLs.
     if (protocol.startsWith("http") && fromMeta && fromMeta === window.location.origin) {
         cachedApiBase = "";
         return cachedApiBase;
@@ -122,6 +122,14 @@ async function apiUrl(path) {
     return base ? `${base}${p}` : p;
 }
 
+// Logout must use `apiUrl()` so Live Server users hit the same Express host as the form POST (login.js helper).
+if (typeof AppAuth !== "undefined") {
+    AppAuth.wireLogoutWithAsyncUrls(
+        () => apiUrl("/api/auth/logout"),
+        () => apiUrl("/index.html"),
+    );
+}
+
 function scrollToTopAndShowBanner() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -156,7 +164,7 @@ function humanizeErrorBody(raw, status) {
         return inner;
     }
     if (/^\s*</.test(raw)) {
-        return "Server returned HTML instead of JSON — is Express running?";
+        return "Server returned HTML instead of JSON - is Express running?";
     }
     return raw.trim().slice(0, 400);
 }
@@ -207,20 +215,7 @@ form.addEventListener("submit", async (event) => {
     } catch (_err) {
         showBanner(
             "error",
-            "Network error — run npm start and open this site from that URL.",
+            "Network error - run npm start and open this site from that URL.",
         );
     }
-});
-
-logoutBtn.addEventListener("click", async (event) => {
-    event.preventDefault();
-    try {
-        await fetch(await apiUrl("/api/auth/logout"), {
-            method: "POST",
-            credentials: "include",
-        });
-    } catch (_e) {
-        /* ignore */
-    }
-    window.location.href = await apiUrl("/index.html");
 });

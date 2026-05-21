@@ -13,27 +13,41 @@
 </head>
 
 <body>
-    <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see index.js + login.css). -->
+<body>
+    <!-- Accessibility skip link -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see login.js + login.css). -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true" aria-modal="true" role="dialog">
         <div class="login-card" id="loginCard">
             <h2>Login</h2>
             <form id="adminLoginForm">
-                <label>
-                    Username
-                    <input id="username" name="username" type="text" autocomplete="username" required />
-                </label>
-                <label>
-                    Password
-                    <input id="password" name="password" type="password" autocomplete="current-password" required />
-                </label>
+                <div id="loginStepCredentials">
+                    <label>
+                        Username
+                        <input id="username" name="username" type="text" autocomplete="username" required />
+                    </label>
+                    <label>
+                        Password
+                        <input id="password" name="password" type="password" autocomplete="current-password" required />
+                    </label>
+                </div>
+                <!-- MFA: hidden until login.js gets requires2FA from POST /api/auth/login. -->
+                <div id="loginStepMfa" class="login-mfa-step" hidden>
+                    <p class="login-mfa-hint">Enter the 6-digit code from your authenticator app.</p>
+                    <label>
+                        Authentication code
+                        <input id="totpCode" name="totpCode" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000" />
+                    </label>
+                </div>
                 <p id="loginError" class="login-error"></p>
-                <button type="submit"><i class="bi bi-box-arrow-right"></i>Sign In</button>
+                <button type="submit" id="loginSubmitBtn"><i class="bi bi-box-arrow-right"></i>Sign In</button>
                 <button type="button" class="login-cancel" id="closeLoginBtn">Cancel</button>
             </form>
         </div>
     </div>
     <!-- Navigation: Catalog + Account start with the HTML `hidden` attribute so guests only see Home + Login;
-         index.js removes `hidden` after a successful /api/auth/session when someone is logged in. -->
+         index.js + login.js remove `hidden` after a successful /api/auth/session when someone is logged in. -->
     <header class="navbar">
         <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
         <nav class="nav-links">
@@ -65,73 +79,90 @@
     </section>
     </div>
     </div>
-    <main class="card-catalog">
+    <main id="main-content" class="card-catalog">
         <div class="container">
             <h2>Recent items:</h2>
             <!-- Lost / Found tables: tbody is empty in HTML; project_web/js/index.js fills rows from /api/public/items/recent/... -->
-            <section class="lost-board">
-                <h2>Lost Items</h2>
-                <div class="lost-items-list">
-                    <table class="lost-table">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Date Reported</th>
-                                <th>Campus</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lostItemsBody"></tbody>
-                    </table>
-                </div>
+            <section class="lost-board" aria-labelledby="lost-title">
+                <h2 id="lost-title">Lost Items</h2>
+            
+                <table class="lost-table" tabindex="0">
+                    <caption>Recent lost items reported by users</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Item Name</th>
+                            <th scope="col">Date Reported</th>
+                            <th scope="col">Campus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lostItemsBody"></tbody>
+                </table>
             </section>
-            <section class="found-board">
-                <h2>Found Items</h2>
-                <div class="found-items-list">
-                    <table class="found-table">
-                        <thead>
-                            <tr>
-                                <th>Item Name</th>
-                                <th>Date Found</th>
-                                <th>Campus</th>
-                            </tr>
-                        </thead>
-                        <tbody id="foundItemsBody"></tbody>
-                    </table>
-                </div>
+            <section class="found-board" aria-labelledby="found-title">
+                <h2 id="found-title">Found Items</h2>
+            
+                <table class="found-table" tabindex="0">
+                    <caption>Recent found items reported by users</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Item Name</th>
+                            <th scope="col">Date Found</th>
+                            <th scope="col">Campus</th>
+                        </tr>
+                    </thead>
+                    <tbody id="foundItemsBody"></tbody>
+                </table>
             </section>
         </div>
     </main>
     <!-- Footer -->
-    <div class="i-btn">
-        <a href="#" class="circle-btn"><i class="bi bi-arrow-up-short"></i></a>
-        <a href="index.html" class="home-btn"><i class="bi bi-house"></i></a>
-        <a href="catalog.html" class="catalog-btn" id="navQuickCatalog" hidden><i class="bi bi-box-seam-fill"></i></a>
-        <!-- Same visibility rules as header: hidden until logged in (see index.js setAuthenticated). -->
-        <a href="account.html" class="account1-btn" id="navQuickAccount" hidden><i class="bi bi-person-fill"></i></a>
-    </div>
+        <!-- Floating navigation buttons -->
+        <div class="i-btn" aria-label="Quick navigation">
+            <a href="#" class="circle-btn" aria-label="Back to top">
+                <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
+            </a>
+        
+            <a href="index.html" class="home-btn" aria-label="Go to home page">
+                <i class="bi bi-house" aria-hidden="true"></i>
+            </a>
+        
+            <a href="catalog.html" class="catalog-btn" aria-label="Go to catalog page">
+                <i class="bi bi-box-seam-fill" aria-hidden="true"></i>
+            </a>
+        
+            <a href="account.html" class="account1-btn" aria-label="Go to account page">
+                <i class="bi bi-person" aria-hidden="true"></i>
+            </a>
+        </div>
     
 
     <footer class="footer">
         <div class="footer-left">
-            <h3>Contact</h3>
-            <p><a href="mailto:lost@bcit.ca">lost@bcit.ca</a></p>
-            <p>416-280-5555</p>
+        <h3>Contact Us</h3>
+        <p><a href="mailto:lostandfound@bcit.ca">lostandfound@bcit.ca</a></p>
+        <p>(416) 280-5555</p>
         </div>
-        
+
         <div class="footer-center">
-            <h3>Address</h3>
-            <p><a href="https://www.bcit.ca/">BCIT Burnaby, BC</a></p>
+        <h3>Address</h3>
+        <p>
+            <a href="https://www.bcit.ca/about/visit/campuses-directions/burnaby/"
+            >3700 Willingdon Ave, V5G 3L1</a
+            >
+        </p>
         </div>
 
         <div class="footer-right">
-            <h3>Follow Us</h3>
-            <p><a href="https://www.instagram.com/bcitlostandfound/">Instagram</a></p>
-            <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
+        <h3>Follow Us</h3>
+        <p><a href="https://www.instagram.com/bcitlostandfound/">Instagram</a></p>
+        <p><a href="https://www.facebook.com/bcitlostandfound/">Facebook</a></p>
         </div>
             <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
     </footer>
 
-    <!-- Home page logic: login modal, nav visibility, and public table fetch — all in ./js/index.js -->
+    <!-- Shared session helpers + home login modal: must load before index.js (uses AppAuth). -->
+    <script src="./js/login.js" defer></script>
+    <!-- Home: public tables + init that calls AppAuth.initHomePageAuth() -->
     <script src="./js/index.js" defer></script>
 </body>
 

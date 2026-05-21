@@ -1,5 +1,5 @@
 /*
- * login.css — Full-screen login overlay used from index.html (staff login → session cookie).
+ * login.css - Full-screen login overlay used from index.html (staff login → session cookie).
  *
  * Teammates:
  * - Behaviour is driven by project_web/js/index.js (add/remove class `is-open` on #loginOverlay).
@@ -75,4 +75,47 @@
     color: #b91c1c;
     min-height: 1.25rem;
     font-size: 0.92rem;
+}
+
+/*
+ * Login MFA step (index.html #loginStepMfa).
+ * Hidden by default; login.js removes [hidden] after requires2FA.
+ * Do not set display:grid on .login-mfa-step alone - it overrides [hidden] and the field would always show.
+ */
+.login-mfa-step:not([hidden]) {
+    display: grid;
+    gap: 0.75rem;
+    overflow: hidden;
+    animation: login-mfa-expand 0.22s ease-out;
+}
+
+@keyframes login-mfa-expand {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 12rem;
+    }
+}
+
+.login-mfa-hint {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.login-mfa-step input {
+    letter-spacing: 0.25em;
+    text-align: center;
+    font-size: 1.25rem;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Subtle divider when the code block expands under username/password. */
+.login-card--mfa .login-mfa-hint {
+    padding-top: 0.25rem;
+    border-top: 1px solid #e5e7eb;
 }
