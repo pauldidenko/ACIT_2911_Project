@@ -47,12 +47,19 @@ import QRCode from "qrcode"; // Data URL for MFA setup QR on account page
 // Load values from .env into process.env (PORT, DB_FILE, SESSION_SECRET, etc).
 dotenv.config();
 
+// Fail fast if SESSION_SECRET is missing in production
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("SESSION_SECRET must be set in production");
+}
+
 // In ES modules, __dirname is not available by default, so we rebuild it.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT) || 5000;
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 // Allow frontend requests and send cookies (needed for session login).
 app.use(
@@ -63,7 +70,6 @@ app.use(
 );
 app.use(bodyParser.json());
 
-// Session middleware stores login state in a server-side session + browser cookie.
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-only-change-this-secret",
@@ -72,7 +78,8 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 8, // 8 hours
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 1000 * 60 * 60 * 8,
     },
   }),
 );
@@ -988,7 +995,6 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
 });
 // ! ============ END  ====================
 
-
 // ! =========== DELETE ITEM ROUTE by Gai Deng =====================
 
 app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
@@ -1034,7 +1040,6 @@ app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
 });
 
 // ! ================= END DELETE ROUTE ============================
-
 
 // Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
