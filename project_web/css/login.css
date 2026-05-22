@@ -1,17 +1,9 @@
-/*
- * login.css - Full-screen login overlay used from index.html (staff login → session cookie).
- *
- * Teammates:
- * - Behaviour is driven by project_web/js/index.js (add/remove class `is-open` on #loginOverlay).
- * - The overlay is hidden by default (display: none) so the home page stays public until “Login”.
- * - Background is solid white (#ffffff) so nothing from the page shows through behind the modal
- *   (we used to use a translucent white; product decision was a cleaner full-screen white sheet).
- */
+/* Login popup on the home page (index.html + login.js) */
 
 .login-overlay {
     position: fixed;
     inset: 0;
-    /* Solid white backdrop when the login sheet is open (covers the entire viewport). */
+    /* Full white backdrop when open */
     background: #ffffff;
     display: none;
     align-items: center;
@@ -19,7 +11,7 @@
     z-index: 2000;
 }
 
-/* JS toggles this class when the user opens/closes the login dialog. */
+/* Shown when login.js adds .is-open */
 .login-overlay.is-open {
     display: flex;
 }
@@ -64,7 +56,7 @@
     cursor: pointer;
 }
 
-/* Secondary action to dismiss the modal without submitting (wired in index.js). */
+/* Cancel button */
 .login-card button.login-cancel {
     background: #e5e7eb;
     color: #111827;
@@ -77,11 +69,7 @@
     font-size: 0.92rem;
 }
 
-/*
- * Login MFA step (index.html #loginStepMfa).
- * Hidden by default; login.js removes [hidden] after requires2FA.
- * Do not set display:grid on .login-mfa-step alone - it overrides [hidden] and the field would always show.
- */
+/* MFA code field (only visible when the server asks for it) */
 .login-mfa-step:not([hidden]) {
     display: grid;
     gap: 0.75rem;
@@ -114,7 +102,7 @@
     font-variant-numeric: tabular-nums;
 }
 
-/* Subtle divider when the code block expands under username/password. */
+/* Small line above the MFA hint */
 .login-card--mfa .login-mfa-hint {
     padding-top: 0.25rem;
     border-top: 1px solid #e5e7eb;

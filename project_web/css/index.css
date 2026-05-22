@@ -1,3 +1,5 @@
+/* index.css - home page (index.html): campus hero and recent items tables */
+
 .card {
     align-self: center;
     border-radius: 10px;
@@ -74,7 +76,7 @@
     box-shadow: 4px 4px 0px 0px #000000;
 }
 
-/* ========= Lost and Found items table ========= */
+/* Lost and found preview tables */
 .lost-table,
 .found-table {
     width: 98%;

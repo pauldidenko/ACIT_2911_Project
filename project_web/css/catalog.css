@@ -1,18 +1,7 @@
-/*
- * catalog.css - Styles used only by catalog.html (items table, filters, pagination).
- *
- * Linked from catalog.html as: <link rel="stylesheet" href="./css_file/catalog.css">
- *
- * Note: Some class names still say "lost-" (e.g. .lost-catalog, .lost-table) from older naming;
- *       they are just CSS identifiers - changing them would require updating catalog.html too.
- *
- * Buttons: `.catalog-reset-btn` (orange) and `.catalog-add-btn` (light green link-button) share the same
- *           outline/shadow; colours distinguish reset vs navigate to add-item.html.
- */
+/* Catalog page - filters, table, pagination, view/edit popup */
+/* (Some classes still say "lost-" from an older mockup - harmless) */
 
-/* ========= Accessibility helpers ========= */
-
-/* Hidden visually, but readable by screen readers */
+/* Screen reader only labels */
 .sr-only {
     position: absolute;
     width: 1px;
@@ -25,7 +14,7 @@
     border: 0;
 }
 
-/* Skip link for keyboard users */
+/* Skip link */
 .skip-link {
     position: absolute;
     top: -50px;
@@ -44,7 +33,7 @@
     top: 10px;
 }
 
-/* Strong visible keyboard focus */
+/* Tab focus ring */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -58,7 +47,7 @@ textarea:focus-visible,
     outline-offset: 3px;
 }
 
-/* ========= Main catalog section (white card around everything) ========= */
+/* Main white catalog card */
 .lost-catalog {
     max-width: 98%;
     margin: 20px auto 20px auto;
@@ -70,7 +59,7 @@ textarea:focus-visible,
     box-shadow: 5px 5px 0px 0px #000000;
 }
 
-/* Title row + “+ Add Item” link */
+/* Heading and Add Item button */
 .catalog-header {
     display: flex;
     justify-content: space-between;
@@ -85,12 +74,7 @@ textarea:focus-visible,
     font-size: clamp(1.4rem, 3vw, 2rem);
 }
 
-/* ========= Filter/search panel ========= */
-/*
- * Layout note:
- * catalog.html has eight controls in this row.
- * auto-fit keeps controls aligned and allows the row to reflow cleanly.
- */
+/* Blue filter bar - search, dropdowns, reset */
 .catalog-controls {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -113,18 +97,16 @@ textarea:focus-visible,
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Each filter/search child is a grid item; this prevents long option text from breaking the layout. */
 .catalog-controls > * {
     min-width: 0;
 }
 
-/* Makes the whole filter box feel interactive */
 .catalog-controls:hover {
     transform: translateY(-2px);
     box-shadow: 6px 6px 0px 0px #000000;
 }
 
-/* Shared look for text search and all <select> filters */
+/* Search box and dropdowns */
 .search-box,
 .filter-box {
     width: 100%;
@@ -141,19 +123,16 @@ textarea:focus-visible,
     transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.2s ease;
 }
 
-/* Search input */
 .search-box {
     min-width: 0;
     cursor: text;
 }
 
-/* Input/filter hover effect */
 .search-box:hover,
 .filter-box:hover {
     background-color: #fff9d6;
 }
 
-/* Input/filter focus effect */
 .search-box:focus,
 .filter-box:focus {
     outline: none;
@@ -162,7 +141,7 @@ textarea:focus-visible,
     box-shadow: 5px 5px 0px 0px #000000;
 }
 
-/* Catalog action buttons - same chunky outline as filters; colour differentiates role */
+/* Reset and Add Item buttons */
 .catalog-reset-btn,
 .catalog-add-btn {
     height: 40px;
@@ -182,7 +161,7 @@ textarea:focus-visible,
     transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Orange “Reset filters” */
+/* Orange reset */
 .catalog-reset-btn {
     width: 100%;
     background-color: #fdba74;
@@ -200,7 +179,7 @@ textarea:focus-visible,
     box-shadow: 2px 2px 0px 0px #000000;
 }
 
-/* Light green “+ Add Item” - same shape as reset, links to add-item */
+/* Green Add Item link */
 .catalog-add-btn {
     background-color: #bbf7d0;
     color: #14532d;
@@ -218,8 +197,7 @@ textarea:focus-visible,
     box-shadow: 2px 2px 0px 0px #000000;
 }
 
-/* ========= Table wrapper ========= */
-/* Lets the table scroll sideways on small screens instead of breaking the layout */
+/* Table scrolls sideways on small screens */
 .table-wrapper {
     margin-top: 28px;
     overflow-x: auto;
@@ -232,13 +210,12 @@ textarea:focus-visible,
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Makes the whole table feel more alive */
 .table-wrapper:hover {
     transform: translateY(-3px);
     box-shadow: 8px 8px 0px 0px #000000;
 }
 
-/* ========= Data table ========= */
+/* Items table */
 .lost-table {
     width: 100%;
     border-collapse: separate;
@@ -246,7 +223,6 @@ textarea:focus-visible,
     background-color: #fefce8;
 }
 
-/* Table cells */
 .lost-table th,
 .lost-table td {
     padding: 18px 22px;
@@ -254,7 +230,6 @@ textarea:focus-visible,
     border-bottom: 1.5px solid black;
 }
 
-/* Table heading */
 .lost-table th {
     background-color: #3b82f6;
     color: white;
@@ -263,7 +238,6 @@ textarea:focus-visible,
     font-size: 1rem;
 }
 
-/* Rounded top corners for table header */
 .lost-table th:first-child {
     border-top-left-radius: 11px;
 }
@@ -272,48 +246,42 @@ textarea:focus-visible,
     border-top-right-radius: 11px;
 }
 
-/* Optional: header hover */
 .lost-table th:hover {
     background-color: #2563eb;
 }
 
-/* Smooth effect for table rows */
 .lost-table tbody tr {
     transition: background-color 0.2s ease;
     cursor: default;
 }
 
-/* Alternating row color to make the table easier to read */
+/* Striped rows */
 .lost-table tbody tr:nth-child(even) {
     background-color: #fff9d6;
 }
 
-/* Row hover effect to make the table feel more interactive */
 .lost-table tbody tr:hover {
     background-color: #eaf3ff;
     cursor: default;
 }
 
-/* Add pink accent line on the left when hovering */
+/* Pink bar on hover */
 .lost-table tbody tr:hover td:first-child {
     box-shadow: inset 6px 0 0 #f472b6;
     padding-left: 24px;
     transition: box-shadow 0.2s ease, padding-left 0.2s ease;
 }
 
-/* No double border under the last row */
 .lost-table tr:last-child td {
     border-bottom: none;
 }
 
-/* Keeps View/Edit/Delete buttons on one line */
 .lost-table td:last-child {
     white-space: nowrap;
     min-width: 220px;
 }
 
-/* ========= Status pills (lost / found / claimed / deleted) ========= */
-/* catalog.js adds class="status <status>" on a <span>; color comes from .status.<value> below */
+/* Status badges - lost, found, claimed, deleted */
 .status {
     display: inline-block;
     min-width: 75px;
@@ -328,7 +296,6 @@ textarea:focus-visible,
     transition: transform 0.2s ease;
 }
 
-/* Make status badge slightly pop on row hover */
 .lost-table tbody tr:hover .status {
     transform: scale(1.05);
 }
@@ -338,7 +305,7 @@ textarea:focus-visible,
     color: black;
 }
 
-/* Legacy name - kept in case old markup still uses “returned” */
+/* Old "returned" label if any row still has it */
 .status.returned {
     background-color: #c4b5fd;
     color: black;
@@ -359,8 +326,7 @@ textarea:focus-visible,
     color: black;
 }
 
-/* ========= Row action links (View / Edit / Delete) ========= */
-/* Buttons / links styled like chunky buttons */
+/* View, Edit, Delete buttons */
 .action-btn {
     display: inline-block;
     margin: 3px 5px;
@@ -401,8 +367,7 @@ textarea:focus-visible,
     box-shadow: 2px 2px 0px 0px #000000;
 }
 
-/* ========= Pagination ========= */
-/* Previous / Next under the table */
+/* Previous / Next */
 .catalog-pagination {
     margin-top: 22px;
     display: flex;
@@ -411,15 +376,14 @@ textarea:focus-visible,
     gap: 12px;
 }
 
-/* Dim Prev/Next when JS sets disabled on the button */
+/* Greyed out when no more pages */
 .catalog-pagination .action-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
 }
 
-/* ! ============== New By Gai Deng - modal css ========== */
-/* Full-screen dimmed overlay; flex keeps the white card centred on any screen size. */
+/* View / Edit popup overlay */
 .modal {
     position: fixed;
     top: 0;
@@ -433,11 +397,7 @@ textarea:focus-visible,
     z-index: 9999;
 }
 
-/*
- * View / delete popup: cap height so a long item never runs off the viewport.
- * Extra top padding leaves room for the × close button. The inner #modalBody scrolls
- * on its own so the header area and close control stay usable.
- */
+/* White popup box - scrolls if content is long */
 .modal-content {
     background: white;
     padding: 20px;
@@ -458,16 +418,13 @@ textarea:focus-visible,
     min-height: 0;
 }
 
-/* Edit item: same scroll behaviour as View, but a bit wider so the two-column add-item form fits. */
+/* Wider popup when editing */
 .modal-content.modal-content--edit {
     width: min(720px, 94vw);
     max-width: 94vw;
 }
 
-/*
- * Preview of the existing upload in the edit form (not the huge hero image from View).
- * Keeps the preview from blowing up the scroll area.
- */
+/* Thumbnail of current photo in edit form */
 #modalBody .catalog-edit-current-img {
     max-width: 100%;
     max-height: 180px;
@@ -477,7 +434,7 @@ textarea:focus-visible,
     margin-top: 8px;
 }
 
-/* Inline validation / server error strip above the edit form (filled by catalog.js on failed PUT). */
+/* Red error message in edit form */
 #modalBody .catalog-edit-form-error {
     margin: 0 0 12px 0;
     padding: 10px 12px;
@@ -492,7 +449,6 @@ textarea:focus-visible,
     display: none;
 }
 
-/* Close button inside modal */
 .close-btn {
     position: absolute;
     top: 10px;
@@ -515,13 +471,7 @@ textarea:focus-visible,
     color: white;
 }
 
-/* ! =============== END ===================== */
-
-/* ========= Narrow screens: stack filters vertically, full-width inputs ========= */
-/*
- * On phones / narrow tablets we override the auto-fit grid above and force one column so every
- * control spans the full width of the blue filter card (easier to tap, no horizontal scroll).
- */
+/* Phone layout - filters stack in one column */
 @media screen and (max-width: 842px) {
     .catalog-controls {
         grid-template-columns: 1fr;
@@ -543,7 +493,7 @@ textarea:focus-visible,
     }
 }
 
-/* Reduce motion for users who prefer less animation */
+/* Less animation if user prefers reduced motion */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

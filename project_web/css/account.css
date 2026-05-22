@@ -1,5 +1,4 @@
-/* ========= Account hero section ========= */
-/* White banner at the top of the Account page */
+/* Top banner on Account page */
 .account-hero {
     max-width: 98%;
     min-height: 120px;
@@ -17,7 +16,7 @@
     margin-top: 20px;
 }
 
-/* Main Account page title */
+/* Page heading */
 .account-hero-content h1 {
     margin: 0 0 10px 0;
     font-size: clamp(1.8rem, 4vw, 2.5rem);
@@ -25,15 +24,13 @@
     color: black;
 }
 
-/* Short description under the title */
 .account-hero-content p {
     margin: 0;
     font-size: clamp(0.95rem, 2vw, 1.1rem);
     color: black;
 }
 
-/* ========= Main account content section ========= */
-/* White card around all account information */
+/* White card holding profile + stats */
 .account-section {
     max-width: 98%;
     margin: 5px auto 20px auto;
@@ -45,7 +42,7 @@
     box-shadow: 4px 4px 0px 0px #000000;
 }
 
-/* Two-column layout for account info and quick actions */
+/* Profile card and MFA card side by side */
 .account-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -53,7 +50,7 @@
     margin-bottom: 30px;
 }
 
-/* Account cards and statistic cards */
+/* Yellow cards with black border */
 .account-card,
 .stat-card {
     background-color: #fefce8;
@@ -65,20 +62,19 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Interactive hover effect for cards */
+/* Lift on hover */
 .account-card:hover,
 .stat-card:hover {
     transform: translateY(-4px);
     box-shadow: 6px 6px 0px 0px #000000;
 }
 
-/* Card headings */
 .account-card h2 {
     margin-top: 0;
     margin-bottom: 20px;
 }
 
-/* Each row inside Account Information card */
+/* Username, role, etc. rows */
 .account-info-row {
     display: flex;
     justify-content: space-between;
@@ -87,12 +83,11 @@
     border-bottom: 1.5px solid black;
 }
 
-/* Removes border from last account info row */
 .account-info-row:last-child {
     border-bottom: none;
 }
 
-/* Active account status badge */
+/* Green "Active" pill */
 .active-status {
     background-color: #86efac;
     color: black;
@@ -103,11 +98,7 @@
     font-weight: bold;
 }
 
-/*
- * ========= MFA (account.html) =========
- * Card: status text + Set up / Disable buttons (account.js toggles disabled).
- * Modal: scrollable QR setup popup (#mfaSetupOverlay).
- */
+/* MFA section and setup popup */
 .mfa-status-text {
     margin: 0 0 18px 0;
     line-height: 1.5;
@@ -128,7 +119,7 @@
     font-size: inherit;
 }
 
-/* Inactive MFA button - visible but not clickable while the other action applies. */
+/* Greyed out when the other MFA button is the one to use */
 .mfa-actions .account-btn:disabled {
     cursor: not-allowed;
     opacity: 0.45;
@@ -147,7 +138,7 @@
     box-shadow: none;
 }
 
-/* Full-screen setup popup; .is-open from account.js when user clicks Set up MFA. */
+/* QR setup overlay */
 .mfa-overlay {
     position: fixed;
     inset: 0;
@@ -165,7 +156,7 @@
     display: flex;
 }
 
-/* Yellow card body - scrolls on small screens when QR + manual key + form are tall. */
+/* Yellow modal box - scrolls if content is tall */
 .mfa-modal {
     position: relative;
     width: min(440px, 94vw);
@@ -277,7 +268,7 @@
     font-size: inherit;
 }
 
-/* Main account buttons */
+/* Pink action buttons */
 .account-btn {
     display: inline-block;
     text-align: center;
@@ -293,12 +284,11 @@
     transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.15s ease;
 }
 
-/* Secondary button, for example Back to Home */
+/* White variant */
 .secondary-btn {
     background-color: white;
 }
 
-/* Button hover effect */
 .account-btn:hover {
     background-color: black;
     color: white;
@@ -306,39 +296,34 @@
     box-shadow: 5px 5px 0px 0px #000000;
 }
 
-/* Button click effect */
 .account-btn:active {
     transform: translate(1px, 1px);
     box-shadow: 2px 2px 0px 0px #000000;
 }
 
-/* ========= Statistics section ========= */
-/* Four-column layout for item counts */
+/* Item count boxes (lost, found, claimed, etc.) */
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 15px;
 }
 
-/* Statistic cards */
 .stat-card {
     text-align: center;
 }
 
-/* Statistic title */
 .stat-card h3 {
     margin: 0 0 10px 0;
     font-size: 1.1rem;
 }
 
-/* Statistic number */
 .stat-card p {
     margin: 0;
     font-size: 2rem;
     font-weight: bold;
 }
 
-/* Different colors for each stat number */
+/* Blue, pink, green, purple numbers */
 .stat-card:nth-child(1) p {
     color: #3b82f6;
 }
@@ -355,8 +340,7 @@
     color: #8b5cf6;
 }
 
-/* ========= Responsive design ========= */
-/* On smaller screens, cards stack vertically */
+/* Stack cards on narrow screens */
 @media screen and (max-width: 842px) {
     .account-grid,
     .stats-grid {
