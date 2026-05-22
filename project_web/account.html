@@ -1,22 +1,12 @@
 <!doctype html>
-<!--
-  account.html - Admin-facing account summary (quick links, live stats).
-
-  Security: ./js/login.js then ./js/account.js (defer). account.js calls GET /api/auth/session first; if not authenticated,
-  the browser is sent to index.html before sensitive UI is relied on.
-
-  Stats row (.stats-grid): the four <p> elements use ids statTotalItems, statTotalLost, statTotalFound,
-  statTotalClaimed. account.js replaces the initial "-" with numbers from GET /api/admin/stats after
-  login is confirmed. That endpoint is admin-only; deleted items are excluded from total items - see
-  app.js comments on /api/admin/stats for exact counting rules.
--->
+<!-- Logged-in admin page: profile info, MFA settings, and item counts -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BCIT lost and found | Account</title>
-    <link rel="stylesheet" href="./css_file/style.css" />
-    <link rel="stylesheet" href="./css_file/account.css" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <link rel="stylesheet" href="./css/account.css" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -54,6 +44,7 @@
       </nav>
     </header>
 
+    <!-- Page title strip -->
     <section class="account-hero">
       <div class="account-hero-content">
         <h1><i class="bi bi-person"></i>Account Summary</h1>
@@ -62,12 +53,13 @@
 
     <section class="account-section">
       <div class="account-grid">
+        <!-- Who's logged in -->
         <div class="account-card profile-card">
           <h2>Account Information</h2>
 
           <div class="account-info-row">
             <span>Username:</span>
-            <!-- Default text replaced by account.js from /api/auth/session when the user is logged in. -->
+            <!-- Username filled in by account.js -->
             <strong id="accountUsername">admin</strong>
           </div>
 
@@ -87,7 +79,7 @@
           </div>
         </div>
 
-        <!-- MFA controls: account.js enables Set up OR Disable (not both). Setup opens #mfaSetupOverlay below. -->
+        <!-- Turn MFA on/off (optional extra login step on the home page) -->
         <div class="account-card mfa-card">
           <h2>Multi-factor authentication</h2>
           <p class="mfa-status-text" id="mfaStatusText">Checking MFA status…</p>
@@ -107,11 +99,10 @@
         </div>
       </div>
 
-      <!-- Item counts: filled by ./js/account.js (loadAccountStats) from GET /api/admin/stats. -->
+      <!-- Dashboard numbers - start as "-" until account.js loads them -->
       <div class="stats-grid">
         <div class="stat-card">
           <h3>Total items</h3>
-          <!-- Non-deleted workflow rows only (lost + found + claimed); see backend route. -->
           <p id="statTotalItems">-</p>
         </div>
 
@@ -131,7 +122,7 @@
         </div>
       </div>
 
-      <!-- MFA setup: scan QR, enter live 6-digit code, Enable MFA → verify then save secret (account.js). -->
+      <!-- MFA setup wizard (QR + 6-digit code) -->
       <div
         id="mfaSetupOverlay"
         class="mfa-overlay"
@@ -191,12 +182,11 @@
       <div class="container"></div>
     </main>
 
-    <!-- Session guard + stats: login.js (AppAuth) must load first so logout wiring exists. -->
     <script src="./js/login.js" defer></script>
     <script src="./js/account.js" defer></script>
   </body>
-  <!-- Footer -->
-  <!-- Floating navigation buttons -->
+
+  <!-- Floating shortcut buttons -->
   <div class="i-btn" aria-label="Quick navigation">
     <a href="#" class="circle-btn" aria-label="Back to top">
       <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
@@ -240,6 +230,4 @@
       &copy; 2026 BCIT Lost and Found. All rights reserved.
     </p>
   </footer>
-
-  <!-- focus effect -->
 </html>

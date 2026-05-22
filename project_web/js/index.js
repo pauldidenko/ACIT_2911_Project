@@ -1,9 +1,4 @@
-/**
- * index.js - Home page (index.html): public “recent items” tables only.
- *
- * Login modal, session check, and Logout / nav visibility live in **login.js** (`AppAuth.initHomePageAuth`).
- * Load order in index.html: `login.js` then this file (both defer) so `AppAuth` exists before `initIndexPage` runs.
- */
+/* index.js - home page: load recent lost/found tables (login is in login.js) */
 
 const lostItemsBody = document.getElementById("lostItemsBody");
 const foundItemsBody = document.getElementById("foundItemsBody");
@@ -15,7 +10,7 @@ function formatDate(value) {
     return dt.toLocaleDateString();
 }
 
-/** Prevents reflected XSS if an item name ever contained HTML special characters. */
+/* Escape text before putting it in table HTML */
 function escapeHtml(str) {
     if (str == null) return "";
     const div = document.createElement("div");
@@ -23,18 +18,6 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
-/**
- * Optional hook: if the URL is index.html?search=wallet, both public endpoints receive the same
- * search query. Handy for demos or future UI without changing the server contract.
- */
-function publicSearchQueryString() {
-    const raw = new URLSearchParams(window.location.search).get("search");
-    const term = raw != null ? String(raw).trim() : "";
-    if (!term) return "";
-    return `?search=${encodeURIComponent(term)}`;
-}
-
-/** Builds innerHTML for tbody#lostItemsBody (columns: name, date reported, campus). */
 function renderLostRows(items) {
     if (!items.length) {
         return '<tr><td colspan="3">No items to show.</td></tr>';
@@ -51,7 +34,6 @@ function renderLostRows(items) {
         .join("");
 }
 
-/** Builds innerHTML for tbody#foundItemsBody; prefers date_found, falls back to date_reported. */
 function renderFoundRows(items) {
     if (!items.length) {
         return '<tr><td colspan="3">No items to show.</td></tr>';
@@ -69,23 +51,24 @@ function renderFoundRows(items) {
         .join("");
 }
 
-/**
- * Pulls the home-page preview from the **public** API (no cookies sent on purpose).
- * We use credentials: "omit" so this feature never accidentally depends on being logged in.
- */
+/* Load recent lost/found rows from the public API (no login required) */
 async function loadPublicRecentTables() {
     if (!lostItemsBody && !foundItemsBody) {
         return;
     }
-    const qs = publicSearchQueryString();
+
+    // Optional: index.html?search=wallet filters both tables (no search box on the page)
+    const search = new URLSearchParams(window.location.search).get("search")?.trim();
+    const query = search ? `?search=${encodeURIComponent(search)}` : "";
+
     const opts = { credentials: "omit" };
     try {
         const [lostRes, foundRes] = await Promise.all([
             lostItemsBody
-                ? fetch(`/api/public/items/recent/lost${qs}`, opts)
+                ? fetch(`/api/public/items/recent/lost${query}`, opts)
                 : Promise.resolve(null),
             foundItemsBody
-                ? fetch(`/api/public/items/recent/found${qs}`, opts)
+                ? fetch(`/api/public/items/recent/found${query}`, opts)
                 : Promise.resolve(null),
         ]);
 
@@ -114,9 +97,8 @@ async function loadPublicRecentTables() {
     }
 }
 
-/** Session + login UI (login.js) runs beside public tables so first paint stays consistent when possible. */
 async function initIndexPage() {
-    // If login.js failed to load, we still show public tables - just skip auth wiring instead of throwing.
+    /* Run login check and table load at the same time */
     const auth =
         typeof AppAuth !== "undefined" ? AppAuth.initHomePageAuth() : Promise.resolve();
     await Promise.all([auth, loadPublicRecentTables()]);
