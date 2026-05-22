@@ -1,8 +1,3 @@
-@font-face {
-    font-family: 'Inter';
-    src: url('./font/Inter-VariableFont_opsz,wght.ttf');
-}
-
 * {
     box-sizing: border-box;
     font-family: 'Inter', 'Arial', 'sans-serif', 'Times New Roman', 'Helvetica', 'Segoe UI';

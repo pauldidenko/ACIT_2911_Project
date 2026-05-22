@@ -13,11 +13,10 @@
 </head>
 
 <body>
-<body>
-    <!-- Accessibility skip link -->
+    <!-- Lets keyboard users skip straight to the main tables -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- Login modal: hidden until JS adds class "is-open" on #loginOverlay (see login.js + login.css). -->
+    <!-- Staff login popup (login.js opens it when you click Login in the nav) -->
     <div id="loginOverlay" class="login-overlay" aria-hidden="true" aria-modal="true" role="dialog">
         <div class="login-card" id="loginCard">
             <h2>Login</h2>
@@ -32,7 +31,7 @@
                         <input id="password" name="password" type="password" autocomplete="current-password" required />
                     </label>
                 </div>
-                <!-- MFA: hidden until login.js gets requires2FA from POST /api/auth/login. -->
+                <!-- Only shows up if the server asks for an authenticator code -->
                 <div id="loginStepMfa" class="login-mfa-step" hidden>
                     <p class="login-mfa-hint">Enter the 6-digit code from your authenticator app.</p>
                     <label>
@@ -46,8 +45,7 @@
             </form>
         </div>
     </div>
-    <!-- Navigation: Catalog + Account start with the HTML `hidden` attribute so guests only see Home + Login;
-         index.js + login.js remove `hidden` after a successful /api/auth/session when someone is logged in. -->
+    <!-- Top nav: guests only see Home + Login. Catalog/Account show up after you're logged in. -->
     <header class="navbar">
         <h1 class="logo"><a href="index.html" class="logo1">BCIT Lost and Found</a></h1>
         <nav class="nav-links">
@@ -59,7 +57,7 @@
             </ul>   
         </nav>
     </header>
-    <!-- Main Content -->
+    <!-- Hero + campus photos -->
     <div class = "hero-img">
         <h1><i class="bi bi-bank"></i> Welcome to BCIT Lost and Found</h1>
     <section class="card">
@@ -79,10 +77,10 @@
     </section>
     </div>
     </div>
+    <!-- Recent lost/found items (public preview - index.js loads the rows) -->
     <main id="main-content" class="card-catalog">
         <div class="container">
             <h2>Recent items:</h2>
-            <!-- Lost / Found tables: tbody is empty in HTML; project_web/js/index.js fills rows from /api/public/items/recent/... -->
             <section class="lost-board" aria-labelledby="lost-title">
                 <h2 id="lost-title">Lost Items</h2>
             
@@ -115,8 +113,7 @@
             </section>
         </div>
     </main>
-    <!-- Footer -->
-        <!-- Floating navigation buttons -->
+    <!-- Quick links that float on the side of the page -->
         <div class="i-btn" aria-label="Quick navigation">
             <a href="#" class="circle-btn" aria-label="Back to top">
                 <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
@@ -160,9 +157,7 @@
             <p class="copyright">&copy; 2026 BCIT Lost and Found. All rights reserved.</p>
     </footer>
 
-    <!-- Shared session helpers + home login modal: must load before index.js (uses AppAuth). -->
     <script src="./js/login.js" defer></script>
-    <!-- Home: public tables + init that calls AppAuth.initHomePageAuth() -->
     <script src="./js/index.js" defer></script>
 </body>
 

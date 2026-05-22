@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- catalog.html - Admin items table; loads data from GET /api/admin/items (see catalog.js). -->
+<!-- Admin catalog: search, filter, and manage items (catalog.js talks to the API) -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -7,7 +7,7 @@
     <title>BCIT lost and found | Catalog</title>
 
     <link rel="stylesheet" href="./css_file/style.css" />
-    <!-- add-item.css: shared form look for the catalog “Edit” popup (same grid, inputs, Save/Cancel as add-item.html). -->
+    <!-- Reuses add-item form styles for the edit popup -->
     <link rel="stylesheet" href="./css_file/add-item.css" />
     <link rel="stylesheet" href="./css_file/catalog.css" />
     <link
@@ -17,7 +17,7 @@
   </head>
 
   <body>
-    <!-- Accessibility skip link -->
+    <!-- Skip link for screen readers -->
     <a href="#catalog-title" class="skip-link">Skip to catalog</a>
 
     <header class="navbar">
@@ -61,7 +61,7 @@
           </a>
         </div>
 
-        <!-- Filters/search area -->
+        <!-- Search + filters (catalog.js reads these and refetches the table) -->
         <div
           class="catalog-controls"
           role="search"
@@ -140,7 +140,7 @@
           </button>
         </div>
 
-        <!-- Catalog table -->
+        <!-- Item list - rows built by catalog.js -->
         <div class="table-wrapper">
           <table class="lost-table">
             <caption class="sr-only">
@@ -163,7 +163,7 @@
           </table>
         </div>
 
-        <!-- Pagination -->
+        <!-- Page prev/next -->
         <div class="catalog-pagination" aria-label="Catalog pagination">
           <button
             id="prevPageBtn"
@@ -188,8 +188,7 @@
       </section>
     </main>
 
-    <!-- ! ===== New by Gai Deng ===== -->
-    <!-- Modal shell: #modalContent is the white card (catalog.js toggles .modal-content--edit for a wider edit form). -->
+    <!-- Popup for View / Edit item (content injected by catalog.js) -->
     <div
       id="viewModal"
       class="modal hidden"
@@ -210,9 +209,7 @@
         <div id="modalBody"></div>
       </div>
     </div>
-    <!-- ! ============== END =============== -->
-
-    <!-- Floating navigation buttons -->
+    <!-- Floating shortcut buttons -->
     <div class="i-btn" aria-label="Quick navigation">
       <a href="#" class="circle-btn" aria-label="Back to top">
         <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
@@ -239,7 +236,6 @@
       </a>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
       <div class="footer-left">
         <h3>Contact Us</h3>
