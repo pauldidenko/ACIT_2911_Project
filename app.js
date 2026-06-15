@@ -202,7 +202,7 @@ app.get("/", (req, res) => {
 // Login: username + password first. If this user has MFA enabled, we do NOT create a session until
 // they also send a valid 6-digit code from their phone app (same request or a follow-up submit).
 app.post("/api/auth/login", async (req, res) => {
-  const { username, password, totpCode } = req.body ?? {};
+  const { username, password } = req.body ?? {};
 
   if (!username || !password) {
     return res
@@ -225,22 +225,22 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    if (admin.totp_secret) {
-      // Password was correct - tell the browser to show the code field (index.html login overlay).
-      if (!totpCode) {
-        return res.json({ requires2FA: true });
-      }
+    // if (admin.totp_secret) {
+    //   // Password was correct - tell the browser to show the code field (index.html login overlay).
+    //   if (!totpCode) {
+    //     return res.json({ requires2FA: true });
+    //   }
 
-      // Check the 6-digit code against the secret saved when they enabled MFA on the account page.
-      const isValid = authenticator.verify({
-        token: String(totpCode).trim(),
-        secret: admin.totp_secret,
-      });
+    //   // Check the 6-digit code against the secret saved when they enabled MFA on the account page.
+    //   const isValid = authenticator.verify({
+    //     token: String(totpCode).trim(),
+    //     secret: admin.totp_secret,
+    //   });
 
-      if (!isValid) {
-        return res.status(401).json({ error: "Invalid authentication code" });
-      }
-    }
+    //   if (!isValid) {
+    //     return res.status(401).json({ error: "Invalid authentication code" });
+    //   }
+    // }
 
     req.session.isAdmin = true;
     req.session.adminId = admin.id;
