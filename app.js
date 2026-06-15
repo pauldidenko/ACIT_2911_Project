@@ -1,14 +1,34 @@
-/*
- * app.js - foundIt backend (Express + SQLite + sessions + file uploads)
+/**
+ * app.js - Lost & Found backend (Express 5 + SQLite + sessions + multipart uploads).
  *
- * npm start - reads .env for PORT, DB_FILE, SESSION_SECRET
- * API routes are registered before static files so /api/... is never shadowed by a filename
- * Admin routes use requireAdmin (must be logged in)
+ * For teammates:
+ * - Run: `npm start` (uses PORT and paths from `.env`; defaults in code if missing).
+ * - Static files live in `project_web/`; API routes are registered BEFORE `express.static`
+ *   so `/api/...` is never confused with a filename.
+ * - Admin routes use `requireAdmin` (session must have logged in via POST `/api/auth/login`).
  *
- * Public (no login): GET /api/public/items/recent/lost|found - 3 rows for index.html
- * Admin catalog: GET/POST/PUT/DELETE /api/admin/items
- * Account: GET /api/admin/stats, /api/admin/2fa/*
- * MFA: optional 6-digit code on login; setup on account page
+ * --- Public “home preview” API (added for index.html) ---
+ * These routes are intentionally open (no login cookie required). They only return a tiny
+ * slice of the database so visitors can see recent activity without exposing admin data:
+ *   GET /api/public/items/recent/lost   - status=lost, LIMIT 3, newest by date_reported
+ *   GET /api/public/items/recent/found - status=found, LIMIT 3, newest by date_found (fallback date_reported)
+ * Optional query: ?search=… - same text search idea as the admin list (name / description / location), still capped at 3 rows.
+ * The full catalog stays on GET /api/admin/items (requires admin session).
+ *
+ * --- Account dashboard stats (account.html) ---
+ * GET /api/admin/stats - admin session only (`requireAdmin`). Returns JSON counts from the `items`
+ * table for the four stat cards: totalItems (rows whose status is lost, found, or claimed only -
+ * excludes deleted and any other status), plus totalLost / totalFound / totalClaimed (exact status
+ * match). Wired from project_web/js/account.js after the session check passes.
+ *
+ * - Items: GET/POST `/api/admin/items` is one `app.route()` so GET (list) and POST (create + optional image) stay together.
+ * - Images: uploaded to `project_web/uploads/items`, URL stored in DB as `/uploads/items/<filename>`.
+ * - `GET /add-item.html` injects `<meta name="app-api-origin">` so the add-item page always knows the real server URL.
+ *
+ * --- MFA (authenticator app, 6-digit codes) ---
+ * Uses `otplib` (TOTP, 30-second codes) + `qrcode` for setup. Secret stored in `admin_users.totp_secret`.
+ * Login: POST `/api/auth/login` with optional `totpCode`; responds `{ requires2FA: true }` when password is OK but code missing.
+ * Account page: GET/POST `/api/admin/2fa/*` - status, generate QR, verify, enable, disable (see comments on each route).
  */
 import express from "express";
 import bodyParser from "body-parser";
@@ -21,24 +41,18 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import multer from "multer";
-import { authenticator } from "otplib";
-import QRCode from "qrcode";
+import { authenticator } from "otplib"; // TOTP: 6-digit codes, 30s window (Google Authenticator–compatible)
+import QRCode from "qrcode"; // Data URL for MFA setup QR on account page
 
+// Load values from .env into process.env (PORT, DB_FILE, SESSION_SECRET, etc).
 dotenv.config();
 
-/* Production needs SESSION_SECRET in .env */
-if (!process.env.SESSION_SECRET && process.env.NODE_ENV === "production") {
-  throw new Error("SESSION_SECRET must be set in production");
-}
-
-/* ES modules need __dirname built from import.meta.url */
+// In ES modules, __dirname is not available by default, so we rebuild it.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT) || 5000;
 
 const app = express();
-
-app.set("trust proxy", 1);
 
 // Allow frontend requests and send cookies (needed for session login).
 app.use(
@@ -49,6 +63,7 @@ app.use(
 );
 app.use(bodyParser.json());
 
+// Session middleware stores login state in a server-side session + browser cookie.
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "dev-only-change-this-secret",
@@ -57,8 +72,7 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 1000 * 60 * 60 * 8,
+      maxAge: 1000 * 60 * 60 * 8, // 8 hours
     },
   }),
 );
@@ -104,7 +118,7 @@ async function initializeDatabase() {
   }
 }
 
-/* Old DBs: migrate image_path_name column if needed */
+// `items.image_path`: rename legacy `image_path_name` if present, else add column if missing.
 async function ensureItemsImageColumn() {
   const cols = await allAsync(`PRAGMA table_info(items)`);
   const names = new Set(cols.map((c) => c.name));
@@ -122,7 +136,7 @@ async function ensureItemsImageColumn() {
   }
 }
 
-/* Add totp_secret column if missing (MFA) */
+// Older databases may lack totp_secret; add it on startup so MFA works without manual ALTER TABLE.
 async function ensureTotpSecretColumn() {
   const cols = await allAsync(`PRAGMA table_info(admin_users)`);
   const names = new Set(cols.map((c) => c.name));
@@ -134,7 +148,7 @@ async function ensureTotpSecretColumn() {
   }
 }
 
-/* Need at least one row in admin_users */
+// Safety check: app should not run without at least one admin account.
 async function ensureAdminExists() {
   const users = await allAsync(`SELECT id, username FROM admin_users LIMIT 1`);
   if (users.length > 0) return;
@@ -144,6 +158,7 @@ async function ensureAdminExists() {
   );
 }
 
+// Middleware used by protected routes (admin-only endpoints).
 function requireAdmin(req, res, next) {
   if (!req.session.isAdmin) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -151,7 +166,7 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-/* Item photos: multer saves to project_web/uploads/items */
+// Uploaded item photos: stored under project_web/uploads/items and served as /uploads/items/...
 const itemsUploadDir = path.join(__dirname, "project_web", "uploads", "items");
 if (!fs.existsSync(itemsUploadDir)) {
   fs.mkdirSync(itemsUploadDir, { recursive: true });
@@ -176,14 +191,16 @@ const uploadItemImage = multer({
   limits: { fileSize: 8 * 1024 * 1024 },
 });
 
-/* --- Routes (all API routes come before express.static below) --- */
+// API routes are registered BEFORE express.static (same idea as template_server.js: session + routes,
+// then static). That way POST /api/... is never ambiguous, and a stray file under project_web/ cannot shadow an API path.
 
-/* Home page */
+// Default page route.
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "project_web", "index.html"));
 });
 
-/* Login - password first; if MFA is on, also need totpCode before we set the session */
+// Login: username + password first. If this user has MFA enabled, we do NOT create a session until
+// they also send a valid 6-digit code from their phone app (same request or a follow-up submit).
 app.post("/api/auth/login", async (req, res) => {
   const { username, password, totpCode } = req.body ?? {};
 
@@ -209,12 +226,12 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     if (admin.totp_secret) {
-      /* Password OK - tell frontend to show MFA field (requires2FA) */
+      // Password was correct - tell the browser to show the code field (index.html login overlay).
       if (!totpCode) {
         return res.json({ requires2FA: true });
       }
 
-      /* Check 6-digit code against saved secret */
+      // Check the 6-digit code against the secret saved when they enabled MFA on the account page.
       const isValid = authenticator.verify({
         token: String(totpCode).trim(),
         secret: admin.totp_secret,
@@ -236,9 +253,12 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-/* MFA routes (account page) - setup, verify, enable, disable */
+// ---------------------------------------------------------------------------
+// MFA admin routes (account.html). User must already be logged in (requireAdmin).
+// Flow to turn MFA on: setup → verify (proves phone scanned QR) → enable (writes DB).
+// ---------------------------------------------------------------------------
 
-/* Is MFA turned on for this user? */
+/** Account page: is MFA on for the logged-in user? { has2FA: true|false } */
 app.get("/api/admin/2fa/status", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
@@ -261,7 +281,7 @@ app.get("/api/admin/2fa/status", requireAdmin, async (req, res) => {
   }
 });
 
-/* Generate secret + QR; temp secret lives in session until enable */
+/** Start setup: new random secret + QR image. Secret stays in session only until enable - not in DB yet. */
 app.get("/api/admin/2fa/setup", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
@@ -291,6 +311,7 @@ app.get("/api/admin/2fa/setup", requireAdmin, async (req, res) => {
       console.error("QR code generation error:", qrErr);
     }
 
+    // Stash in session so verify/enable know which secret we're testing (not committed until enable).
     req.session.temp2FASecret = secret;
 
     return res.json({
@@ -304,7 +325,7 @@ app.get("/api/admin/2fa/setup", requireAdmin, async (req, res) => {
   }
 });
 
-/* User entered a valid code from their authenticator app */
+/** User entered a code during setup - confirm their app is synced before we save the secret. */
 app.post("/api/admin/2fa/verify", requireAdmin, async (req, res) => {
   const { totpCode } = req.body ?? {};
   try {
@@ -329,7 +350,7 @@ app.post("/api/admin/2fa/verify", requireAdmin, async (req, res) => {
   }
 });
 
-/* Save secret to database - MFA is now on */
+/** After verify succeeded: copy temp secret from session into admin_users.totp_secret (MFA is now on). */
 app.post("/api/admin/2fa/enable", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
@@ -355,7 +376,7 @@ app.post("/api/admin/2fa/enable", requireAdmin, async (req, res) => {
   }
 });
 
-/* Turn MFA off */
+/** Turn MFA off: clear totp_secret so login only needs password again. */
 app.post("/api/admin/2fa/disable", requireAdmin, async (req, res) => {
   try {
     const username = req.session.username;
@@ -376,6 +397,7 @@ app.post("/api/admin/2fa/disable", requireAdmin, async (req, res) => {
   }
 });
 
+// Logout endpoint: destroy active session.
 app.post("/api/auth/logout", requireAdmin, (req, res) => {
   req.session.destroy((err) => {
     if (err) return res.status(500).json({ error: "Failed to log out" });
@@ -383,6 +405,7 @@ app.post("/api/auth/logout", requireAdmin, (req, res) => {
   });
 });
 
+// Session-check endpoint used by frontend to know if user is already logged in.
 app.get("/api/auth/session", (req, res) => {
   if (!req.session.isAdmin) return res.json({ authenticated: false });
   return res.json({
@@ -391,10 +414,19 @@ app.get("/api/auth/session", (req, res) => {
   });
 });
 
-/* Public home page tables - no login, max 3 rows each, limited columns */
+// ---------------------------------------------------------------------------
+// Public recent-items endpoints (home page - project_web/js/index.js)
+// ---------------------------------------------------------------------------
+// Why this exists: index.html is public. We must NOT use /api/admin/items there
+// (that would 401 without a cookie). Instead these handlers return only safe columns
+// and never more than PUBLIC_RECENT_LIMIT rows, so strangers never scrape the full DB.
 const PUBLIC_RECENT_LIMIT = 3;
 
-/* Optional ?search= on URL - same text search as admin catalog */
+/**
+ * If `search` is non-empty, narrows the query with the same LIKE pattern we use on the
+ * admin catalog (item name, description, or location text). Still combined with LIMIT 3
+ * in the route handlers - this is for optional filtering only, not bulk export.
+ */
 function appendPublicSearchFilters(search, whereParts, params) {
   const term = String(search || "").trim();
   if (!term) return;
@@ -405,6 +437,7 @@ function appendPublicSearchFilters(search, whereParts, params) {
   params.push(like, like, like);
 }
 
+/** Latest lost rows for the public “Lost Items” table on the home page. */
 async function listPublicRecentLost(req, res) {
   const search = String(req.query.search || "").trim();
   const whereParts = [`status = 'lost'`];
@@ -429,6 +462,7 @@ async function listPublicRecentLost(req, res) {
   }
 }
 
+/** Latest found rows for the public “Found Items” table (sort prefers date_found when set). */
 async function listPublicRecentFound(req, res) {
   const search = String(req.query.search || "").trim();
   const whereParts = [`status = 'found'`];
@@ -453,13 +487,23 @@ async function listPublicRecentFound(req, res) {
   }
 }
 
+// Wire paths before static files (same rule as other /api routes).
 app.get("/api/public/items/recent/lost", listPublicRecentLost);
 app.get("/api/public/items/recent/found", listPublicRecentFound);
 
-/*
- * Account page stat cards.
- * totalItems = lost + found + claimed (not deleted).
- * totalLost / totalFound / totalClaimed = exact status match.
+// Simple protected test route (useful for debugging auth quickly).
+app.get("/api/admin/health", requireAdmin, (_req, res) => {
+  res.json({ ok: true, message: "Admin session active" });
+});
+
+/**
+ * Dashboard aggregates for account.html (see project_web/js/account.js → loadAccountStats).
+ * Protected: same admin cookie as /api/admin/items; unauthenticated clients get 401 JSON.
+ *
+ * Counting rules (schema.sql `items.status`: lost | found | claimed | deleted):
+ * - totalItems: only rows in the three active workflow states; `deleted` is never counted.
+ * - totalLost / totalFound / totalClaimed: rows whose status equals that single value.
+ * With valid data, totalItems === totalLost + totalFound + totalClaimed.
  */
 app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
   try {
@@ -472,6 +516,7 @@ app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
       FROM items
     `);
     const row = rows[0] ?? {};
+    // CamelCase keys match what account.js expects when mapping onto #statTotal* elements.
     return res.json({
       totalItems: Number(row.total_items) || 0,
       totalLost: Number(row.total_lost) || 0,
@@ -484,19 +529,21 @@ app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
   }
 });
 
-/* Admin catalog list - filters, sort, pagination (GET /api/admin/items) */
+// Main catalog API: GET list + POST create on same path (single Route - fixes POST not matching when registered separately on Express 5 / router).
 async function listAdminItems(req, res) {
+  // Pagination controls.
   const page = Math.max(1, Number(req.query.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
   const offset = (page - 1) * limit;
 
+  // Filter values from query string.
   const search = String(req.query.search || "").trim();
   const category = String(req.query.category || "").trim();
   const status = String(req.query.status || "").trim();
   const campus = String(req.query.campus || "").trim();
   const dateFrom = String(req.query.dateFrom || "").trim();
 
-  /* Only allow known column names in ORDER BY (SQL injection guard) */
+  // Whitelist allowed sort columns to avoid SQL injection in ORDER BY.
   const allowedSortColumns = {
     item_name: "item_name",
     category: "category",
@@ -516,6 +563,9 @@ async function listAdminItems(req, res) {
   const sortExpression =
     sortBy === "date_reported" ? "datetime(date_reported)" : sortBy;
 
+  // Piece together WHERE + bound values in one pass. Older code wiped the WHERE array when you
+  // chose a status filter but forgot to reset `params`, so SQLite got extra bindings and blew up
+  // with SQLITE_RANGE - annoying bug that only showed up after you’d already typed a search, etc.
   const where = [];
   const params = [];
 
@@ -523,7 +573,7 @@ async function listAdminItems(req, res) {
     where.push("status = ?");
     params.push(status);
   } else {
-    /* Default: only show lost and found in the table */
+    // No dropdown choice: keep the table useful by hiding claimed/deleted unless you filter to them.
     where.push("status IN ('lost', 'found')");
   }
 
@@ -551,7 +601,7 @@ async function listAdminItems(req, res) {
   const whereClause = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
   try {
-    /* Count for pagination */
+    // Query 1: total matching rows (for pagination metadata).
     const countRows = await allAsync(
       `SELECT COUNT(*) AS total FROM items ${whereClause}`,
       params,
@@ -559,7 +609,7 @@ async function listAdminItems(req, res) {
     const totalItems = countRows[0]?.total || 0;
     const totalPages = Math.max(1, Math.ceil(totalItems / limit));
 
-    /* Rows for this page */
+    // Query 2: current page - includes everything the table needs, plus claimant fields for clients that want them without a second request.
     const itemRows = await allAsync(
       `
       SELECT
@@ -589,7 +639,8 @@ async function listAdminItems(req, res) {
   }
 }
 
-/* POST new item (multipart form + optional image) */
+// Create item (multipart: text fields + optional single image). Admin only.
+// template_server.js uses paths like /admin/... - we expose both /api/admin/items and /admin/items.
 async function handleCreateItem(req, res) {
   const b = req.body ?? {};
   const item_name = String(b.item_name ?? "").trim();
@@ -682,11 +733,8 @@ async function handleCreateItem(req, res) {
   }
 }
 
-/*
- * PUT update item (catalog edit popup).
- * Keeps date_claimed if the form does not send it.
- * New image replaces old file on disk when uploaded.
- */
+// Admin catalog: update an existing row (multipart, same field names as POST create / add-item.html).
+// The edit form in catalog.js PUTs here; we keep date_claimed if the form doesn’t send it, and optionally swap the image file on disk.
 async function handleUpdateItem(req, res) {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id < 1) {
@@ -755,7 +803,7 @@ async function handleUpdateItem(req, res) {
   const stored_location = String(b.stored_location ?? "").trim() || null;
   const date_lost = String(b.date_lost ?? "").trim() || null;
   const date_found = String(b.date_found ?? "").trim() || null;
-  /* Edit form has no date_claimed field yet - keep existing value */
+  // Edit form doesn’t include date_claimed yet - don’t wipe it on every save.
   const date_claimed =
     String(b.date_claimed ?? "").trim() || existing.date_claimed || null;
   const claimant_name = String(b.claimant_name ?? "").trim() || null;
@@ -763,7 +811,7 @@ async function handleUpdateItem(req, res) {
   const notes = String(b.notes ?? "").trim() || null;
 
   let image_path = existing.image_path;
-  /* Optional new photo - delete previous file from uploads folder */
+  // New file optional: if staff picked one, store new path and try to delete the previous upload from disk.
   if (req.file) {
     if (
       existing.image_path &&
@@ -835,7 +883,14 @@ app
   .get(requireAdmin, listAdminItems)
   .post(requireAdmin, uploadItemImage.single("image"), handleCreateItem);
 
-/* Patch add-item.html so the form knows this server's URL (helps Live Server setups) */
+app.post(
+  "/admin/items",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleCreateItem,
+);
+
+/** When serving add-item from Express, inject the real origin so the browser always POSTs to this server (any PORT). */
 function injectAppApiOriginMeta(html, req) {
   const origin = `${req.protocol}://${req.get("host")}`;
   return html.replace(
@@ -856,14 +911,21 @@ app.get("/add-item.html", (req, res) => {
   }
 });
 
+// Update existing catalog row (same multipart contract as POST /api/admin/items - used by catalog edit popup).
 app.put(
   "/api/admin/items/:id",
   requireAdmin,
   uploadItemImage.single("image"),
   handleUpdateItem,
 );
+app.put(
+  "/admin/items/:id",
+  requireAdmin,
+  uploadItemImage.single("image"),
+  handleUpdateItem,
+);
 
-/* Return JSON errors for bad uploads (before static files) */
+// Multer errors → JSON (keep before static so POST failures never fall through to HTML-only stacks).
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     const message =
@@ -881,7 +943,8 @@ app.use((err, req, res, next) => {
   next();
 });
 
-/* GET one item by id - catalog View and Edit popup */
+// ! =========== NEW by Gai Deng ===================== ✅✅
+// Single-row JSON for catalog “View” (read-only) and “Edit” (form pre-fill). Includes `description` because the edit form matches add-item.html.
 app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
   const id = req.params.id;
 
@@ -923,11 +986,16 @@ app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
     return res.status(500).json({ error: "Failed to fetch item" });
   }
 });
-/* Soft delete - set status to deleted (row stays in DB) */
+// ! ============ END  ====================
+
+
+// ! =========== DELETE ITEM ROUTE by Gai Deng =====================
+
 app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
   const id = req.params.id;
 
   try {
+    // Check if item exists first
     const rows = await allAsync(
       `
       SELECT id, status
@@ -942,6 +1010,7 @@ app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
 
+    // Reset item status to deleted
     await runAsync(
       `
       UPDATE items
@@ -964,9 +1033,13 @@ app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
   }
 });
 
-/* Serve project_web (HTML, CSS, JS, uploads) - must be after all /api routes */
+// ! ================= END DELETE ROUTE ============================
+
+
+// Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
 app.use(express.static(path.join(__dirname, "project_web")));
 
+// App startup sequence: initialize DB, ensure admin exists, then listen.
 async function startServer() {
   try {
     await initializeDatabase();
@@ -982,7 +1055,12 @@ async function startServer() {
   }
 }
 
-/* npm start only - tests import app without listening */
+// Static HTML/CSS/JS/uploads (after API routes + HTML overrides).
+app.use(express.static(path.join(__dirname, "project_web")));
+// Entry point.
+
+// Only start listening when run directly (node app.js / npm start),
+// not when imported by tests (import app from "../app.js").
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   startServer();
 }

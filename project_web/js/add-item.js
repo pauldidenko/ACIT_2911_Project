@@ -1,13 +1,24 @@
-/* add-item.js - create a new catalog item (multipart form + optional photo) */
+/**
+ * add-item.js - behaviour for `add-item.html` (staff “create catalog item” form).
+ *
+ * Teammates:
+ * - Form submits via `fetch` to POST `/api/admin/items` with `FormData` (multipart: fields + optional file field `image`).
+ * - You must be logged in as admin (session cookie); 401 → redirect to login.
+ * - `resolveApiBase()` finds the Node server when the HTML is opened from Live Server or another port:
+ *   probes GET `/api/auth/session`, uses `<meta name="app-api-origin">`, or scans common ports.
+ * - When you open the page through Express (`npm start`), the server injects `app-api-origin` and same-origin fetch works.
+ * - Success → banner + redirect to `catalog.html`; errors → `#pageBanner` message at top.
+ * - Logout in the header is wired by **login.js** (`AppAuth.wireLogoutWithAsyncUrls` with this file’s `apiUrl()`).
+ */
 const form = document.getElementById("addItemForm");
 const pageBanner = document.getElementById("pageBanner");
 
-/* Cached API base: "" = same origin, or full URL like http://localhost:5000 */
+/** Cached API base: "" = same origin, or full origin like http://localhost:3000 */
 let cachedApiBase;
 
-/*
- * Find the Express server when the page is opened from Live Server or another port.
- * Tries /api/auth/session on same origin, meta tag, then common localhost ports.
+/**
+ * Detect where Express is running by probing GET /api/auth/session (JSON).
+ * Fixes Live Server / other static hosts sending POST to the wrong port.
  */
 async function probeSession(base) {
     const url =
@@ -43,7 +54,7 @@ async function resolveApiBase() {
 
     const { protocol, hostname } = window.location;
 
-    /* npm start: meta matches this page origin */
+    // Server-injected meta (see app.js GET /add-item.html) - same origin, use relative API URLs.
     if (protocol.startsWith("http") && fromMeta && fromMeta === window.location.origin) {
         cachedApiBase = "";
         return cachedApiBase;
@@ -68,14 +79,14 @@ async function resolveApiBase() {
         return cachedApiBase;
     }
 
-    /* Same host as API */
+    // 1) Page served by Express on the same host/port as the API
     let found = await probeSession("");
     if (found !== null) {
         cachedApiBase = found;
         return cachedApiBase;
     }
 
-    /* Meta tag points at Node (Live Server setup) */
+    // 2) Meta tag (explicit Live Server → Node URL)
     if (fromMeta) {
         found = await probeSession(fromMeta);
         if (found !== null) {
@@ -84,7 +95,7 @@ async function resolveApiBase() {
         }
     }
 
-    /* Guess common ports */
+    // 3) Try typical Express ports (matches PORT in .env)
     const ports = [5000, 3000, 8080, 4000];
     const hosts = [...new Set([hostname, "localhost", "127.0.0.1"])];
     const current = window.location.origin.replace(/\/$/, "");
@@ -111,7 +122,7 @@ async function apiUrl(path) {
     return base ? `${base}${p}` : p;
 }
 
-/* Logout uses same base URL as the form */
+// Logout must use `apiUrl()` so Live Server users hit the same Express host as the form POST (login.js helper).
 if (typeof AppAuth !== "undefined") {
     AppAuth.wireLogoutWithAsyncUrls(
         () => apiUrl("/api/auth/logout"),
@@ -137,7 +148,7 @@ function hideBanner() {
     pageBanner.classList.remove("success", "error");
 }
 
-/* Plain error text when the server returns HTML instead of JSON */
+/** Turn Express HTML error pages into a short plain-text hint. */
 function humanizeErrorBody(raw, status) {
     if (!raw || !raw.trim()) {
         return status === 404
@@ -196,7 +207,7 @@ form.addEventListener("submit", async (event) => {
 
         showBanner(
             "success",
-            "Item saved successfully. Redirecting to the catalog...",
+            "Item saved successfully. Redirecting to the catalog…",
         );
         setTimeout(async () => {
             window.location.href = await apiUrl("/catalog.html");

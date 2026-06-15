@@ -1,16 +1,37 @@
-/* catalog.js - admin item table: filters, pagination, view/edit/delete popup */
+/**
+ * catalog.js - Lost & Found items catalog page logic.
+ *
+ * This file runs after catalog.html has loaded (script tag is at the bottom of the page),
+ * so getElementById can safely find every element.
+ *
+ * Flow:
+ * 1. User must be logged in (session cookie). If not, the API returns 401 and we send them to login (index.html).
+ * 2. loadItems() asks the server for one page of items, using current filters + sort + page number.
+ * 3. renderRows() fills the HTML table with the JSON rows returned.
+ *
+ * API: GET `/api/admin/items` with query params (see app.js `listAdminItems`). Same origin as catalog page when using `npm start`.
+ * Navbar logout is wired in **login.js** (`AppAuth.wireStandardLogoutById`); catalog.js only assumes `#logoutBtn` exists in the HTML.
+ */
 
-/* Shared modal for View, Edit, and Delete confirm */
+// ! =========== NEW by Gai Deng =====================
+// One overlay for View (read-only), Edit (add-item-style form), and Delete confirm.
+// `modalContent` is the white card: we toggle `.modal-content--edit` on it so Edit can be wider than View.
 const modal = document.getElementById("viewModal");
 const modalContent = document.getElementById("modalContent");
 const modalBody = document.getElementById("modalBody");
 const closeModalBtn = document.getElementById("closeModal");
 
+// ! =================== END  ========================
+// How many rows per page (must match what you expect in the UI).
 const PAGE_SIZE = 10;
+
+// Which page we are on right now (1-based). Used in the API query ?page=...
 let currentPage = 1;
+
+// Total pages from the last successful response (used to disable Next / know bounds).
 let currentTotalPages = 1;
 
-/* Filter and table elements */
+// --- Grab references to every interactive piece of the page (must match id="" in catalog.html) ---
 const searchInput = document.getElementById("searchInput");
 const categoryFilter = document.getElementById("categoryFilter");
 const statusFilter = document.getElementById("statusFilter");
@@ -24,6 +45,7 @@ const nextPageBtn = document.getElementById("nextPageBtn");
 const pageInfo = document.getElementById("pageInfo");
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 
+/** Turn a date string from the server into a short local date for display (e.g. US locale). */
 function formatDate(value) {
     if (!value) return "-";
     const dt = new Date(value);
@@ -31,14 +53,17 @@ function formatDate(value) {
     return dt.toLocaleDateString();
 }
 
+/** Capitalize first letter so status looks nicer in the table (lost → Lost). */
 function toTitleCase(value) {
     if (!value) return "-";
     return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-/*
- * View modal: show date lost or date found.
- * If both dates exist, use status (found vs lost) to pick which label to show.
+/**
+ * One line for the View modal: “Date lost” vs “Date found”.
+ * In the real data, found items often still have a date_lost filled in, so we can’t
+ * always prefer date_lost first - we pick the single date that makes sense, and if
+ * both exist we let the row’s status decide (found → show date found, lost → date lost).
  */
 function buildItemDateLine(item) {
     const hasLost = Boolean(item.date_lost && String(item.date_lost).trim());
@@ -61,9 +86,9 @@ function buildItemDateLine(item) {
     return "";
 }
 
-/* Edit form helpers (same fields as add-item page) */
+// ----- Edit modal: helpers (same field names as add-item.html so PUT matches POST) -----
 
-/* Stop user input from breaking HTML attributes */
+/** Safe text inside HTML (form values, textarea body, img alt/src). */
 function escapeHtml(text) {
     if (text == null || text === "") return "";
     return String(text)
@@ -73,7 +98,7 @@ function escapeHtml(text) {
       .replace(/"/g, "&quot;");
 }
 
-/* Trim server datetime to yyyy-mm-dd for date inputs */
+/** `input type="date"` needs yyyy-mm-dd; SQLite sometimes returns a longer datetime string. */
 function dateInputValue(raw) {
     if (!raw) return "";
     const s = String(raw).trim();
@@ -83,7 +108,7 @@ function dateInputValue(raw) {
     return d.toISOString().slice(0, 10);
 }
 
-/* Must match schema.sql category list */
+/** Must stay in lockstep with the server CHECK constraint and add-item.html options. */
 const EDIT_CATEGORIES = [
     "Electronics",
     "Accessories",
@@ -96,11 +121,18 @@ const EDIT_CATEGORIES = [
     "Misc",
 ];
 
+/** Builds the literal ` selected` attribute on `<option>` when that option matches the saved row. */
 function optionSelected(value, current) {
     return value === current ? " selected" : "";
 }
 
-/* Build edit form HTML from item JSON - escapeHtml on all user fields */
+/**
+ * Edit popup: mirrors add-item.html fields so staff get the same layout and styles (add-item.css + .modal-content--edit).
+ * Filled from GET /api/admin/items/:id; submit uses multipart PUT to the same id.
+ *
+ * We build HTML as a string (no JSX), so every user-controlled value goes through `escapeHtml`
+ * to avoid breaking out of attributes or injecting tags. Image path is escaped too for the src attribute.
+ */
 function buildEditFormHtml(item) {
     const dl = dateInputValue(item.date_lost);
     const df = dateInputValue(item.date_found);
@@ -194,7 +226,10 @@ function buildEditFormHtml(item) {
         </form>`;
 }
 
-/* PUT multipart save - empty file field keeps the old photo */
+/**
+ * Save edits: browser sends multipart FormData exactly like “Add item”, but the verb is PUT on the row id.
+ * Leave the file input empty to keep the existing photo; if the server accepts a new file it replaces the old one.
+ */
 async function onCatalogEditSubmit(ev) {
     ev.preventDefault();
     const form = ev.currentTarget;
@@ -226,7 +261,10 @@ async function onCatalogEditSubmit(ev) {
     }
 }
 
-/* Load item by id and show edit form in the modal */
+/**
+ * Opens the wide edit layout, pulls the latest row from the API, then drops in the form HTML.
+ * Cancel / Save are wired after insert because the nodes did not exist until then.
+ */
 async function openEditModal(id) {
     modalContent.classList.add("modal-content--edit");
     modal.classList.remove("hidden");
@@ -255,11 +293,16 @@ async function openEditModal(id) {
     }
 }
 
+/** Hides the overlay and resets card width so the next open isn’t stuck in “edit” sizing. */
 function closeCatalogModal() {
     modal.classList.add("hidden");
     modalContent.classList.remove("modal-content--edit");
 }
 
+/**
+ * Builds the table body HTML from the array of item objects returned by the API.
+ * Uses template literals (`backticks`) to inject values - same idea as Python f-strings.
+ */
 function renderRows(items) {
     if (!items.length) {
         catalogBody.innerHTML = '<tr><td colspan="6">No items found.</td></tr>';
@@ -270,6 +313,7 @@ function renderRows(items) {
 
         const showDelete = item.status !== "deleted";
 
+        // View and Edit both use `data-id` with GET /api/admin/items/:id; catalog.js decides read-only vs form.
         return `
             <tr>
                 <td>${item.item_name ?? "-"}</td>
@@ -292,6 +336,7 @@ function renderRows(items) {
     }).join("");
 }
 
+/** Updates the “Page X of Y” text and enables/disables Prev/Next buttons. */
 function updatePagination(page, totalPages) {
     currentPage = page;
     currentTotalPages = totalPages;
@@ -300,7 +345,10 @@ function updatePagination(page, totalPages) {
     nextPageBtn.disabled = page >= totalPages;
 }
 
-/* GET /api/admin/items with current filters and page */
+/**
+ * Main data fetch: calls GET /api/admin/items with query params built from the form.
+ * credentials: "include" sends the browser cookie so the server knows who is logged in.
+ */
 async function loadItems() {
     const params = new URLSearchParams({
         page: String(currentPage),
@@ -318,7 +366,7 @@ async function loadItems() {
         credentials: "include"
     });
 
-    /* 401 = not logged in */
+    // Not logged in → go back to home/login page.
     if (response.status === 401) {
         window.location.href = "/index.html";
         return;
@@ -334,19 +382,20 @@ async function loadItems() {
     updatePagination(data.pagination.page, data.pagination.totalPages);
 }
 
-/* Reset to page 1 when filters change */
+/** Whenever filters change, start again from page 1 so you don’t land on an empty page. */
 function onFilterChange() {
     currentPage = 1;
     loadItems();
 }
 
-/* Wait 250ms after typing before searching */
+// Debounce: wait until user stops typing for 250ms before searching (fewer API calls).
 let searchDebounce;
 searchInput.addEventListener("input", () => {
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(onFilterChange, 250);
 });
 
+// Any dropdown or date change triggers a fresh load from page 1.
 [categoryFilter, statusFilter, campusFilter, dateFromFilter, sortBy, sortDir].forEach((el) => {
     el.addEventListener("change", onFilterChange);
 });
@@ -363,6 +412,7 @@ nextPageBtn.addEventListener("click", () => {
     loadItems();
 });
 
+// Reset all filters and sort to defaults, then reload (same as freshly opening catalog with defaults).
 resetFiltersBtn.addEventListener("click", () => {
     searchInput.value = "";
     categoryFilter.selectedIndex = 0;
@@ -375,30 +425,39 @@ resetFiltersBtn.addEventListener("click", () => {
     loadItems();
 });
 
+// Logout in the header: same POST + home redirect as account (implemented once in login.js).
 if (typeof AppAuth !== "undefined") {
     AppAuth.wireStandardLogoutById();
 }
 
-/* Close modal: X button, click backdrop, Escape */
+// ! =========== NEW by Gai Deng ===================== 
+// modules
+// close button
 closeModalBtn.onclick = () => {
     closeCatalogModal();
 };
 
+// click outside
 modal.onclick = (e) => {
     if (e.target === modal) {
         closeCatalogModal();
     }
 };
 
+// Same as many desktop apps: Escape closes whatever is in the modal (view, edit form, or delete confirm).
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !modal.classList.contains("hidden")) {
         closeCatalogModal();
     }
 });
+// ! =================== END  ========================
 
+// First paint: load page 1 as soon as script runs.
 loadItems();
 
-/* View item - read-only detail in the modal */
+
+// ! =========== NEW by Gai Deng =====================
+// Read-only detail: narrow card, no form. Strip edit width in case the user opened Edit right before this.
 window.openModal = async function (id) {
     modalContent.classList.remove("modal-content--edit");
     modal.classList.remove("hidden");
@@ -416,6 +475,9 @@ window.openModal = async function (id) {
         
         const item = await res.json();
 
+        // Read-only strings: escapeHtml so odd characters in item names or notes can’t break the markup.
+        // Detail panel for “View”: matches the DB fields we care about on the floor -
+        // where it was lost/found vs where it’s stored, reporting + event dates, then claimant info above staff notes.
         modalBody.innerHTML = `
         <h2>${escapeHtml(item.item_name)}</h2>
         
@@ -440,24 +502,27 @@ window.openModal = async function (id) {
         } catch (err) {
             modalBody.innerHTML = "Error loading item";
         }
-};
-
-/* View / Edit clicks on table rows */
-catalogBody.addEventListener("click", (e) => {
-    const viewBtn = e.target.closest(".view-btn");
-    if (viewBtn) {
-        e.preventDefault();
-        window.openModal(viewBtn.dataset.id);
-        return;
-    }
-    const editBtn = e.target.closest(".edit-btn");
-    if (editBtn) {
-        e.preventDefault();
-        openEditModal(editBtn.dataset.id);
-    }
+    };
+    
+    // One listener on the table body: branch on which action link was clicked (View vs Edit).
+    catalogBody.addEventListener("click", (e) => {
+        const viewBtn = e.target.closest(".view-btn");
+        if (viewBtn) {
+            e.preventDefault();
+            window.openModal(viewBtn.dataset.id);
+            return;
+        }
+        const editBtn = e.target.closest(".edit-btn");
+        if (editBtn) {
+            e.preventDefault();
+            openEditModal(editBtn.dataset.id);
+        }
 });
+    
+    // ! =================== END  ========================
 
-/* Delete button - soft delete (status = deleted) */
+// Delete handler 
+
 catalogBody.addEventListener("click", (e) => {
     const btn = e.target.closest(".delete-btn");
     if (!btn) return;
@@ -472,6 +537,8 @@ catalogBody.addEventListener("click", (e) => {
 
 
 
+// ! === DELETE state =====
+/** Narrow centred confirm; not the wide edit layout. */
 function openDeleteModal(id, name) {
     modalContent.classList.remove("modal-content--edit");
     modal.classList.remove("hidden");
@@ -508,6 +575,7 @@ function openDeleteModal(id, name) {
 
             closeCatalogModal();
 
+            // refresh table
             loadItems();
 
         } catch (err) {
@@ -515,3 +583,5 @@ function openDeleteModal(id, name) {
         }
     };
 }
+
+// ! ==== END =======

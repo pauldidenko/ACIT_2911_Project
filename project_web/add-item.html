@@ -1,14 +1,15 @@
 <!doctype html>
-<!-- Form to add a new lost/found item to the catalog -->
+<!-- add-item.html - Admin-only form to insert a row into the `items` table (optional photo upload). -->
+<!-- Served by Express at GET /add-item.html with injected meta app-api-origin (see app.js). -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Filled in by the server so the form posts to the right place (empty = same host as npm start) -->
+    <!-- Leave empty when using npm start (same port as Express). If you use Live Server, set to your Node URL, e.g. http://localhost:3000 - must match the port in .env / terminal. -->
     <meta name="app-api-origin" content="" />
     <title>BCIT lost and found | Add Item</title>
-    <link rel="stylesheet" href="./css/style.css" />
-    <link rel="stylesheet" href="./css/add-item.css" />
+    <link rel="stylesheet" href="./css_file/style.css" />
+    <link rel="stylesheet" href="./css_file/add-item.css" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -46,7 +47,6 @@
       </nav>
     </header>
 
-    <!-- Success/error message after save (add-item.js) -->
     <div id="pageBanner" class="page-banner" role="status" hidden></div>
 
     <section class="lost-hero">
@@ -59,7 +59,6 @@
       </div>
     </section>
 
-    <!-- All fields map to the items table; optional photo goes to uploads/items -->
     <section class="add-item-section">
       <form
         id="addItemForm"
@@ -218,7 +217,8 @@
       </form>
     </section>
 
-    <!-- Floating shortcut buttons -->
+    <!-- Footer -->
+    <!-- Floating navigation buttons -->
     <div class="i-btn" aria-label="Quick navigation">
       <a href="#" class="circle-btn" aria-label="Back to top">
         <i class="bi bi-arrow-up-short" aria-hidden="true"></i>
@@ -272,6 +272,8 @@
         &copy; 2026 BCIT Lost and Found. All rights reserved.
       </p>
     </footer>
+
+    <!-- focus effect -->
 
     <script src="./js/login.js"></script>
     <script src="./js/add-item.js"></script>

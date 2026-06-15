@@ -1,6 +1,39 @@
-/* account.js - admin profile, item counts, MFA setup (must be logged in) */
+/**
+ * account.js - Guard + behaviour for **account.html** (admin profile / quick links page).
+ *
+ * Why this file exists:
+ * - The account page is not meant for random visitors. Unlike index.html (public), anyone who
+ *   bookmarks /account.html should be bounced home unless they already have a valid session cookie.
+ * - We mirror the **catalog** idea: catalog.js calls an admin API and redirects on 401; here we
+ *   proactively call GET /api/auth/session (lightweight, no DB list) and redirect if `authenticated`
+ *   is false. That way we don’t flash sensitive layout longer than necessary.
+ *
+ * Flow:
+ *   1) Fetch session with credentials: "include" (browser sends the same cookie as catalog).
+ *   2) If not authenticated → window.location to index.html (stops the rest of the script).
+ *   3) If authenticated → show who is logged in (#accountUsername); **logout** is wired in login.js (`AppAuth`).
+ *   4) loadAccountStats() → GET /api/admin/stats with the same session cookie. Populates the four
+ *      stat paragraphs in account.html (#statTotalItems, …). If the stats call returns 401 (session
+ *      expired or tampered), redirect to index.html like an unauthenticated visitor.
+ *
+ * **MFA (account page only):**
+ * - Replaced “Quick Actions” with an MFA card: Set up MFA / Disable MFA (one enabled at a time).
+ * - Setup opens a modal (QR + manual key), then verify + enable via `/api/admin/2fa/*`.
+ * - See `loadMfaStatus`, `wireMfaSetupModal` below.
+ *
+ * Related files: app.js (/api/auth/session, /api/auth/logout, /api/admin/stats, /api/admin/2fa/*),
+ * account.html, login.js (`AppAuth` - wires `#logoutBtn` the same way as catalog / add-item).
+ */
 
-/* Fill the four stat boxes from GET /api/admin/stats */
+/**
+ * Fetches aggregate item counts for the Account page stat cards.
+ *
+ * API: GET /api/admin/stats (admin-only). Response fields: totalItems, totalLost, totalFound,
+ * totalClaimed - see app.js route handler for how each count is defined in SQL.
+ *
+ * DOM: each tuple is [element id, JSON property name]. Placeholder "-" means loading failed or
+ * response was not OK; numeric fields render as decimal strings (missing values become "0").
+ */
 async function loadAccountStats() {
     const ids = [
         ["statTotalItems", "totalItems"],
@@ -12,7 +45,7 @@ async function loadAccountStats() {
     try {
         response = await fetch("/api/admin/stats", { credentials: "include" });
     } catch (_error) {
-        /* Network error - leave "-" on the page */
+        // Network failure: keep "-" placeholders so the page does not show stale hard-coded numbers.
         for (const [elId] of ids) {
             const el = document.getElementById(elId);
             if (el) el.textContent = "-";
@@ -20,7 +53,7 @@ async function loadAccountStats() {
         return;
     }
     if (response.status === 401) {
-        /* Session expired - go home */
+        // Cookie invalid or not admin - treat like logged out (same destination as session check).
         window.location.href = "/index.html";
         return;
     }
@@ -50,7 +83,7 @@ async function loadAccountStats() {
     }
 }
 
-/* Only one of Set up / Disable is active at a time */
+/** Grey out the action that does not apply: only “Set up” OR “Disable” is clickable at a time. */
 function setMfaButtonsState(setupBtn, disableBtn, enabled) {
     if (setupBtn) setupBtn.disabled = enabled;
     if (disableBtn) disableBtn.disabled = !enabled;
@@ -90,7 +123,10 @@ async function loadMfaStatus() {
     }
 }
 
-/* MFA setup modal: QR from server, user enters code, verify then enable */
+/**
+ * MFA setup popup: fetch QR from GET /api/admin/2fa/setup, user scans app, enters code,
+ * then POST verify → POST enable. Disable button calls POST /api/admin/2fa/disable.
+ */
 function wireMfaSetupModal() {
     const overlay = document.getElementById("mfaSetupOverlay");
     const setupBtn = document.getElementById("mfaSetupBtn");
@@ -164,7 +200,7 @@ function wireMfaSetupModal() {
         }
     });
 
-    /* Enable MFA button and Enter key both run this */
+    /** Shared by “Enable MFA” click and Enter in the code field: prove the app works, then save secret. */
     async function confirmMfaSetup() {
         if (errorEl) errorEl.textContent = "";
         const totpCode = codeInput ? codeInput.value.trim() : "";
@@ -250,7 +286,7 @@ async function initAccountPage() {
         const response = await fetch("/api/auth/session", { credentials: "include" });
         data = await response.json();
     } catch (_error) {
-        /* Can't reach server - treat as logged out */
+        // Network down or server error - safest UX is to treat as logged-out and send them home.
         window.location.href = "/index.html";
         return;
     }
@@ -266,12 +302,16 @@ async function initAccountPage() {
         usernameEl.textContent = data.username;
     }
 
+    // Shared logout handler (POST + redirect) lives in login.js so catalog/account behave identically.
     if (typeof AppAuth !== "undefined") {
         AppAuth.wireStandardLogoutById();
     }
 
+    // MFA card + setup modal (runs after we know the user is logged in).
     wireMfaSetupModal();
     await loadMfaStatus();
+
+    // Stats require an admin session; server enforces it. Runs after username + logout wiring.
     await loadAccountStats();
 }
 
