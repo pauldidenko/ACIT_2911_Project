@@ -41,8 +41,10 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import multer from "multer";
-import { authenticator } from "otplib"; // TOTP: 6-digit codes, 30s window (Google Authenticator–compatible)
-import QRCode from "qrcode"; // Data URL for MFA setup QR on account page
+// import { authenticator } from "otplib"; // TOTP: 6-digit codes, 30s window (Google Authenticator–compatible)
+// import QRCode from "qrcode"; // Data URL for MFA setup QR on account page
+
+app.set("trust proxy", 1); 
 
 // Load values from .env into process.env (PORT, DB_FILE, SESSION_SECRET, etc).
 dotenv.config();
@@ -57,7 +59,8 @@ const app = express();
 // Allow frontend requests and send cookies (needed for session login).
 app.use(
   cors({
-    origin: true,
+    // origin: true,
+    origin: "https://acit-2911-project-1.onrender.com/",
     credentials: true,
   }),
 );
@@ -71,8 +74,9 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 8, // 8 hours
+      secure: true,
+      sameSite: "none",
+      // maxAge: 1000 * 60 * 60 * 8, // 8 hours
     },
   }),
 );
