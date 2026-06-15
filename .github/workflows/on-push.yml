@@ -19,6 +19,6 @@ jobs:
         with:
           node-version: 20
       - name: Install Dependencies
-        run: npm install && rebuild sqlite3
+        run: npm install && npm rebuild sqlite3
       - name: Run Tests
         run: npm test
