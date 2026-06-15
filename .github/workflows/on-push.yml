@@ -5,8 +5,8 @@ name: Push & Test Express App
 on:
   push:
     branches: ["dev"]
-  pull_request:
-    branches: ["main"]
+  # pull_request:
+  #   branches: ["main"]
 
 jobs:
   builds:
@@ -19,6 +19,6 @@ jobs:
         with:
           node-version: 20
       - name: Install Dependencies
-        run: npm install
+        run: npm install && rebuild sqlite3
       - name: Run Tests
         run: npm test
