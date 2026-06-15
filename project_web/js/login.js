@@ -303,9 +303,10 @@
             const passwordEl = document.getElementById("password");
             const username = usernameEl ? usernameEl.value.trim() : "";
             const password = passwordEl ? passwordEl.value : "";
-            const mfaStep = loginStepMfa();
-            const onMfaStep = mfaStep && !mfaStep.hidden;
-            const totpCode = onMfaStep && totpCodeEl() ? totpCodeEl().value.trim() : "";
+            // const mfaStep = loginStepMfa();
+            // const onMfaStep = mfaStep && !mfaStep.hidden;
+            // const totpCode = onMfaStep && totpCodeEl() ? totpCodeEl().value.trim() : "";
+            const onMfaStep = false;
 
             // MFA field is visible - require a full 6-digit code before hitting the server again.
             if (onMfaStep && totpCode.length !== 6) {
@@ -314,7 +315,7 @@
             }
 
             const body = { username, password };
-            if (onMfaStep) body.totpCode = totpCode;
+            // if (onMfaStep) body.totpCode = totpCode;
 
             try {
                 const response = await fetch("/api/auth/login", {
@@ -326,10 +327,10 @@
 
                 const data = await response.json();
                 // Password OK; account has MFA - expand code input, do not create session yet.
-                if (data.requires2FA) {
-                    showLoginMfaStep();
-                    return;
-                }
+                // if (data.requires2FA) {
+                //     showLoginMfaStep();
+                //     return;
+                // }
                 if (!response.ok) {
                     if (err) err.textContent = data.error || "Login failed";
                     return;
