@@ -44,7 +44,7 @@ import multer from "multer";
 // import { authenticator } from "otplib"; // TOTP: 6-digit codes, 30s window (Google Authenticator–compatible)
 // import QRCode from "qrcode"; // Data URL for MFA setup QR on account page
 
-app.set("trust proxy", 1); 
+
 
 // Load values from .env into process.env (PORT, DB_FILE, SESSION_SECRET, etc).
 dotenv.config();
@@ -55,6 +55,8 @@ const __dirname = path.dirname(__filename);
 const PORT = Number(process.env.PORT) || 5000;
 
 const app = express();
+
+app.set("trust proxy", 1); 
 
 // Allow frontend requests and send cookies (needed for session login).
 app.use(
